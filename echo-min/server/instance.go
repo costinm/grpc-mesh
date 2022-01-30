@@ -33,8 +33,6 @@ import (
 	"go.opencensus.io/stats/view"
 
 	"github.com/costinm/grpc-mesh/echo-min/server/endpoint"
-	"istio.io/istio/pilot/pkg/util/network"
-
 	"istio.io/pkg/log"
 )
 
@@ -137,7 +135,7 @@ func getBindAddresses(ip string) []string {
 	// to be explicit
 	v4, v6 := false, false
 	// Obtain all the IPs from the node
-	ipAddrs, ok := network.GetPrivateIPs(context.Background())
+	ipAddrs, ok := common.GetPrivateIPs(context.Background())
 	if !ok {
 		return []string{ip}
 	}

@@ -44,7 +44,7 @@ import (
 	"github.com/costinm/grpc-mesh/echo-min/common/response"
 	"github.com/costinm/grpc-mesh/echo-min/proto"
 	"github.com/costinm/grpc-mesh/echo-min/server/forwarder"
-	"istio.io/istio/pkg/test/util/retry"
+	"github.com/costinm/grpc-mesh/echo-min/common/retry"
 )
 
 var _ Instance = &grpcInstance{}

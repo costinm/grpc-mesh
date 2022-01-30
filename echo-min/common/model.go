@@ -14,7 +14,7 @@
 
 package common
 
-import "istio.io/istio/pkg/config/protocol"
+import "github.com/costinm/grpc-mesh/echo-min/common/protocol"
 
 // TLSSettings defines TLS configuration for Echo server
 type TLSSettings struct {

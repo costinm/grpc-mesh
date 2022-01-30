@@ -19,7 +19,7 @@ import (
 	"io"
 
 	"github.com/costinm/grpc-mesh/echo-min/common"
-	"istio.io/istio/pkg/config/protocol"
+	"github.com/costinm/grpc-mesh/echo-min/common/protocol"
 )
 
 // IsServerReadyFunc is a function that indicates whether the server is currently ready to handle traffic.

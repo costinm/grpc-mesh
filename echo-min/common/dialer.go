@@ -19,17 +19,16 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/gorilla/websocket"
 	"google.golang.org/grpc"
 )
 
 var (
 	// DefaultGRPCDialFunc just calls grpc.Dial directly, with no alterations to the arguments.
 	DefaultGRPCDialFunc = grpc.DialContext
-	// DefaultWebsocketDialFunc just calls dialer.Dial, with no alterations to the arguments.
-	DefaultWebsocketDialFunc = func(dialer *websocket.Dialer, urlStr string, requestHeader http.Header) (*websocket.Conn, *http.Response, error) {
-		return dialer.Dial(urlStr, requestHeader)
-	}
+	//// DefaultWebsocketDialFunc just calls dialer.Dial, with no alterations to the arguments.
+	//DefaultWebsocketDialFunc = func(dialer *websocket.Dialer, urlStr string, requestHeader http.Header) (*websocket.Conn, *http.Response, error) {
+	//	return dialer.Dial(urlStr, requestHeader)
+	//}
 	// DefaultHTTPDoFunc just calls client.Do with no alterations to the arguments.
 	DefaultHTTPDoFunc = func(client *http.Client, req *http.Request) (*http.Response, error) {
 		return client.Do(req)
@@ -41,7 +40,7 @@ var (
 	// DefaultDialer is provides defaults for all dial functions.
 	DefaultDialer = Dialer{
 		GRPC:      DefaultGRPCDialFunc,
-		Websocket: DefaultWebsocketDialFunc,
+//		Websocket: DefaultWebsocketDialFunc,
 		HTTP:      DefaultHTTPDoFunc,
 		TCP:       DefaultTCPDialFunc,
 	}
@@ -50,8 +49,8 @@ var (
 // GRPCDialFunc a function for establishing a GRPC connection.
 type GRPCDialFunc func(ctx context.Context, address string, opts ...grpc.DialOption) (*grpc.ClientConn, error)
 
-// WebsocketDialFunc a function for establishing a Websocket connection.
-type WebsocketDialFunc func(dialer *websocket.Dialer, urlStr string, requestHeader http.Header) (*websocket.Conn, *http.Response, error)
+//// WebsocketDialFunc a function for establishing a Websocket connection.
+//type WebsocketDialFunc func(dialer *websocket.Dialer, urlStr string, requestHeader http.Header) (*websocket.Conn, *http.Response, error)
 
 // HTTPDoFunc a function for executing an HTTP request.
 type HTTPDoFunc func(client *http.Client, req *http.Request) (*http.Response, error)
@@ -63,7 +62,7 @@ type TCPDialFunc func(dialer net.Dialer, ctx context.Context, address string) (n
 // application to intercept the connection creation.
 type Dialer struct {
 	GRPC      GRPCDialFunc
-	Websocket WebsocketDialFunc
+	//Websocket WebsocketDialFunc
 	HTTP      HTTPDoFunc
 	TCP       TCPDialFunc
 }
@@ -75,9 +74,9 @@ func (d Dialer) FillInDefaults() Dialer {
 	if d.GRPC != nil {
 		ret.GRPC = d.GRPC
 	}
-	if d.Websocket != nil {
-		ret.Websocket = d.Websocket
-	}
+	//if d.Websocket != nil {
+	//	ret.Websocket = d.Websocket
+	//}
 	if d.HTTP != nil {
 		ret.HTTP = d.HTTP
 	}
