@@ -7,3 +7,7 @@ build:
 	mkdir -p ${OUT}
 	(cd echo && ${GOSTATIC} ./cmd/server ./cmd/client)
 	ls -l ${OUT}
+
+
+gen-old:
+	protoc --go_out xds --go_opt=paths=source_relative -I xds xds/*.proto
