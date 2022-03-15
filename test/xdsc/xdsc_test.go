@@ -34,6 +34,7 @@ func TestP4SA(t *testing.T) {
 	kr.Cfg = kc
 	kr.TokenProvider = kc
 	//kr.Client = kc.Client
+	kr.SkipSaveCerts = true
 
 	kr.LoadConfig(ctx)
 

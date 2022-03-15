@@ -16,6 +16,9 @@ gen-old:
 		-I vendor/protoc-gen-validate \
 		$(find proto -name '*.proto')
 
+gen:
+	cd proto && buf build
+
 deps:
 	go install -v github.com/grpc-ecosystem/grpcdebug@latest
 	# Test tool
@@ -24,3 +27,7 @@ deps:
 	GO111MODULE=on go install  github.com/bufbuild/buf/cmd/buf@v1.1.0
 
 #docker run --volume "$(pwd):/workspace" --workdir /workspace bufbuild/buf lint
+
+echo/istio:
+	(cd echo; go install ./cmd/server)
+	server

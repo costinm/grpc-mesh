@@ -23,7 +23,6 @@ import (
 
 	"github.com/costinm/grpc-mesh/echo-micro/proto"
 	"github.com/costinm/grpc-mesh/echo-micro/server"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

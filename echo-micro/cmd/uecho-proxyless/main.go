@@ -33,6 +33,8 @@ import (
 var log = grpclog.Component("echo")
 
 func Run(port string) {
+	// Hack: this is expected to be started with GRPC_ env variable for bootstrap.
+	// If not found, will use the internal API to initialize.
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {

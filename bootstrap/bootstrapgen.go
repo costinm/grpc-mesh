@@ -72,7 +72,7 @@ const template = `
 // POD_NAMESPACE, LABELS - based on standard mounts
 // ISTIO_META_env variables used like in regular Istio
 // ...
-func GenerateBootstrap() error {
+func GenerateBootstrapTmpl() error {
 	bootF := os.Getenv("GRPC_XDS_BOOTSTRAP")
 	if bootF == "" {
 		return errors.New("missing GRPC_XDS_BOOTSTRAP")
@@ -85,7 +85,6 @@ func GenerateBootstrap() error {
 			return err
 		}
 	}
-
 
 	return nil
 
