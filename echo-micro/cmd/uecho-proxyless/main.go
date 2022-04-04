@@ -20,8 +20,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/costinm/grpc-mesh/echo-micro/proto"
 	"github.com/costinm/grpc-mesh/echo-micro/server"
+	"github.com/costinm/grpc-mesh/gen/proto/go/proto"
+	"google.golang.org/grpc/admin"
 	xdscreds "google.golang.org/grpc/credentials/xds"
 	"google.golang.org/grpc/xds"
 
@@ -32,17 +33,12 @@ import (
 
 var log = grpclog.Component("echo")
 
-func Run(port string) {
+func Run(lis net.Listener) error {
 	// Hack: this is expected to be started with GRPC_ env variable for bootstrap.
 	// If not found, will use the internal API to initialize.
 
-	lis, err := net.Listen("tcp", port)
-	if err != nil {
-		log.Fatal("net.Listen(tcp)", port, err)
-	}
-
 	// Replaces: creds := insecure.NewCredentials()
-	creds, err := xdscreds.NewServerCredentials(xdscreds.ServerOptions{FallbackCreds: insecure.NewCredentials()})
+	creds, _ := xdscreds.NewServerCredentials(xdscreds.ServerOptions{FallbackCreds: insecure.NewCredentials()})
 
 	grpcOptions := []grpc.ServerOption{
 		grpc.Creds(creds),
@@ -51,20 +47,32 @@ func Run(port string) {
 	// Replaces: grpc.NewServer(grpcOptions...)
 	grpcServer := xds.NewGRPCServer(grpcOptions...)
 
+	// grpcdebug support
+	admin.Register(grpcServer)
+
 	h := &server.EchoGrpcHandler{}
 	proto.RegisterEchoTestServiceServer(grpcServer, h)
 
-	err = grpcServer.Serve(lis)
+	return grpcServer.Serve(lis)
+}
+
+func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+	}
+
+	err = Run(lis)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// Wait for the process to be shutdown.
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	<-sigs
-}
-
-func main() {
-	Run(":8443")
 }

@@ -15,24 +15,22 @@
 package main
 
 import (
-	"fmt"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/costinm/grpc-mesh/echo-micro/proto"
 	"github.com/costinm/grpc-mesh/echo-micro/server"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/reflection"
 )
 
-func Run(port string) error {
+var log = grpclog.Component("echo")
+
+func Run(lis net.Listener) error {
 	h := &server.EchoGrpcHandler{}
-	lis, err := net.Listen("tcp", port)
-	if err != nil {
-		return err
-	}
 
 	creds := insecure.NewCredentials()
 
@@ -41,33 +39,30 @@ func Run(port string) error {
 	}
 
 	grpcServer := grpc.NewServer(grpcOptions...)
-	proto.RegisterEchoTestServiceServer(grpcServer, h)
 
-	err = grpcServer.Serve(lis)
+	h.Register(grpcServer)
+	reflection.Register(grpcServer)
+
+	return grpcServer.Serve(lis)
+}
+
+func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+	}
+
+	err = Run(lis)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// Wait for the process to be shutdown.
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	<-sigs
-
-	return nil
-}
-
-// Most minimal gRPC based server, for estimating binary size overhead.
-//
-// - 0.8M for a min go program
-// - 4.7M for an echo using HTTP.
-// - 9M - this server, only plain gRPC
-// - 20M - same app, but proxyless gRPC
-// - 22M - plus opencensus, prom, zpages, reflection
-//
-// 	 ocgrpc adds ~300k
-func main() {
-	err := Run(":8080")
-	if err != nil {
-		fmt.Println("Error ", err)
-	}
 }

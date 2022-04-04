@@ -15,15 +15,14 @@
 package main
 
 import (
-	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/costinm/grpc-mesh/echo-micro/proto"
 	"github.com/costinm/grpc-mesh/echo-micro/server"
+	"github.com/costinm/grpc-mesh/gen/proto/go/proto"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -56,7 +55,7 @@ func init() {
 
 	// Similar with pilot-agent
 	registry := prometheus.NewRegistry()
-	wrapped := prometheus.WrapRegistererWithPrefix("sshca_",
+	wrapped := prometheus.WrapRegistererWithPrefix("uecho_",
 		prometheus.Registerer(registry))
 
 	wrapped.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
@@ -70,23 +69,6 @@ func init() {
 		log.Fatalf("could not setup exporter: %v", err)
 	}
 	view.RegisterExporter(exporter)
-
-}
-
-func Run(port string) error {
-	h := &server.EchoGrpcHandler{}
-	lis, err := net.Listen("tcp", port)
-	if err != nil {
-		return err
-	}
-
-	creds := insecure.NewCredentials()
-
-	grpcOptions := []grpc.ServerOption{
-		grpc.Creds(creds),
-		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
-	}
-
 	err = runmetrics.Enable(runmetrics.RunMetricOptions{
 		EnableCPU:    true,
 		EnableMemory: true,
@@ -96,41 +78,51 @@ func Run(port string) error {
 		log.Println(err)
 	}
 
+	zpages.Handle(http.DefaultServeMux, "/debug")
+	http.Handle("/metrics", exporter)
+}
+
+func Run(lis net.Listener) error {
+	h := &server.EchoGrpcHandler{}
+
+	creds := insecure.NewCredentials()
+
+	grpcOptions := []grpc.ServerOption{
+		grpc.Creds(creds),
+		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
+	}
+
 	grpcServer := grpc.NewServer(grpcOptions...)
 	proto.RegisterEchoTestServiceServer(grpcServer, h)
 	admin.Register(grpcServer)
 	reflection.Register(grpcServer)
 
 	go func() {
-		err = grpcServer.Serve(lis)
+		err := grpcServer.Serve(lis)
 		if err != nil {
 			panic(err)
 		}
 	}()
 
-	// Status
-	mux := &http.ServeMux{}
-	zpages.Handle(mux, "/debug")
-
-	http.ListenAndServe("127.0.0.1:8081", mux)
-	// Wait for the process to be shutdown.
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	<-sigs
-
+	// Status on 8081
+	// rpcz, tracez
+	go http.ListenAndServe("127.0.0.1:9381", http.DefaultServeMux)
 	return nil
 }
 
-// Most minimal gRPC based server, for estimating binary size overhead.
-//
-// - 0.8M for a min go program
-// - 4.7M for an echo using HTTP.
-// - 9M - this server, only plain gRPC
-// - 20M - same app, but proxyless gRPC
-// - 22M - plus opencensus, prom, zpages, reflection
 func main() {
-	err := Run(":8080")
-	if err != nil {
-		fmt.Println("Error ", err)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "9382"
 	}
+	lis, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	Run(lis)
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	<-sigs
 }

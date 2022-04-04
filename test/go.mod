@@ -2,7 +2,7 @@ module tests
 
 go 1.17
 
-//replace github.com/GoogleCloudPlatform/cloud-run-mesh v0.0.0-20220128230121-cac57262761b => /ws/dmesh-src/cloud-run-mesh
+replace github.com/GoogleCloudPlatform/cloud-run-mesh v0.0.0-20220128230121-cac57262761b => ../../cloud-run-mesh
 
 replace github.com/costinm/grpc-mesh/xdsc v0.0.0-local => ../xdsc
 

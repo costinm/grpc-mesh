@@ -2,7 +2,6 @@ package logs
 
 import (
 	"io"
-	"io/ioutil"
 	"testing"
 
 	"google.golang.org/grpc/grpclog"
@@ -14,24 +13,15 @@ import (
 var tests = map[string]func(out io.Writer, disabled bool) grpclog.LoggerV2{}
 
 func Benchmark(b *testing.B) {
-	tests["default"] = func(out io.Writer, disabled bool) grpclog.LoggerV2 {
-		return grpclog.Component("default")
-	}
+	b.Run("grpclog", func(b *testing.B) {
+		l := grpclog.Component("default")
+		benchGRPC(b, l)
+	})
+	il := log.RegisterScope("endpoint", "echo serverside", 0)
 
-	for name, t := range tests {
-		b.Run(name, func(b *testing.B) {
-			b.Run("Enabled", func(b *testing.B) {
-				l := t(ioutil.Discard, false)
-				benchGRPC(b, l)
-			})
-			il := log.RegisterScope("endpoint", "echo serverside", 0)
-
-			//b.Run("Disabled", func(b *testing.B) {
-			//	l := t(ioutil.Discard, true)
-			//	benchGRPC(b, l)
-			//})
-		})
-	}
+	b.Run("istio", func(b *testing.B) {
+		benchIstio(b, il)
+	})
 }
 
 var sampleString = "some string with a somewhat realistic length"
@@ -46,7 +36,7 @@ func benchGRPC(b *testing.B, l grpclog.LoggerV2) {
 	})
 }
 
-func benchIstio(b *testing.B, l log.Log) {
+func benchIstio(b *testing.B, l *log.Scope) {
 	b.Run("Msg", func(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {

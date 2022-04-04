@@ -19,44 +19,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
-func TestP4SA(t *testing.T) {
-	// Get an access token for MCP
-	ctx, cf := context.WithTimeout(context.Background(), 100*time.Second)
-	defer cf()
-
-	kr := mesh.New()
-
-	kc := &k8s.K8S{Mesh: kr}
-	err := kc.K8SClient(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	kr.Cfg = kc
-	kr.TokenProvider = kc
-	//kr.Client = kc.Client
-	kr.SkipSaveCerts = true
-
-	kr.LoadConfig(ctx)
-
-	sts, err := sts.NewSTS(kr)
-
-	masterT, err := kr.GetToken(ctx, kr.TrustDomain)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	f, err := sts.TokenFederated(ctx, masterT)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = sts.TokenAccess(ctx, f, "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	//log.Println(a)
-}
-
 // Get mesh config from the current cluster
 func LoadConfig(ctx context.Context) (*mesh.KRun, error) {
 	kr := mesh.New()

@@ -1,4 +1,4 @@
-module bootstrap
+module github.com/costinm/grpc-mesh/bootstrap
 
 go 1.17
 

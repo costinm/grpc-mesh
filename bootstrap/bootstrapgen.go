@@ -1,69 +1,100 @@
 package bootstrap
 
 import (
+	"bytes"
 	"errors"
 	"io/ioutil"
 	"os"
+	"text/template"
 )
 
 // channel_creds - used to authenticate XDS conn, google_default only, using transport credentials
 // certs: mesh_ca (credentials/tls/cert_provider/meshca, file_watcher
 
-const template = `
+// TODO: if auto-mtls label is set, Istiod should generate MTLS config
+// Label would be added by injector or user.
+// This would match Istio behavior. Meanwhile - Policy.
+
+// Server: "unix:///etc/istio/proxy/XDS" using agent, istiod.istio-system.svc:15010 for plaintext
+const grpcTemplate = `
 {
   "xds_servers": [
     {
-      "server_uri": "localhost:15010",
+      "server_uri": "${.Server}",
       "channel_creds": [{"type": "insecure"}],
       "server_features" : ["xds_v3"]
     }
   ],
-  "server_listener_resource_name_template": "istiod.istio-system.svc.cluster.local:15012",
-  "certificate_providers" : {
-			 "files": {
-				 "plugin_name": "file_watcher",
-				 "config": {			
-						"certificate_file":   "/a/b/cert.pem",
-						"private_key_file":    "/a/b/key.pem",
-						"ca_certificate_file": "/a/b/ca.pem",
-						"refresh_interval":   "200s"
-          }
-				},
-			 "mesh_ca": {
-				 "plugin_name": "mesh_ca",
-				 "config": {		
-						"server": {
-									"api_type": 2,
-									"grpc_services": [
-										{
-											"googleGrpc": {
-												"call_credentials": [
-													{
-														"sts_service": {
-															"subject_token_path": "test-subject-token-path"
-														}
-													}
-												]
-											},
-											"timeout": "10s"
-										}
-									]
-								}
-				}
-			 }
-		 },
-    "node": {
-    "id": "sidecar~10.0.0.1~bob.grpcprobe~ns.cluster.local",
+  "node": {
+    "id": "sidecar~${.IP}~${.Name}.${.Namespace}~${.Namespace}.cluster.local",
     "metadata": {
+      "INSTANCE_IPS": "127.0.1.1",
+      "PILOT_SAN": [
+        "istiod.istio-system.svc"
+      ],
       "GENERATOR": "grpc",
-      "NAMESPACE": "grpcprobe",
-      "LABELS": {"version":  "v1"},
-      "INSTANCE_IPS": ["10.0.0.1"],
-      "CLUSTER_ID": "grpcprobe"
+      "NAMESPACE": "${.Namespace}"
+    },
+    "localisty": {},
+    "UserAgentVersionType": "istiov1"
+  },
+  "certificate_providers": {
+    "default": {
+      "plugin_name": "file_watcher",
+      "config": {
+        "certificate_file": "../../../../tests/testdata/certs/default/cert-chain.pem",
+        "private_key_file": "../../../../tests/testdata/certs/default/key.pem",
+        "ca_certificate_file": "../../../../tests/testdata/certs/default/root-cert.pem",
+        "refresh_interval": "900s"
+      }
     }
-  }
+  },
+  "server_listener_resource_name_template": "xds.istio.io/grpc/lds/inbound/%s"
 }
 `
+
+//const oldTemplate = `
+//{
+//  "certificate_providers" : {
+//			 "mesh_ca": {
+//				 "plugin_name": "mesh_ca",
+//				 "config": {
+//						"server": {
+//									"api_type": 2,
+//									"grpc_services": [
+//										{
+//											"googleGrpc": {
+//												"call_credentials": [
+//													{
+//														"sts_service": {
+//															"subject_token_path": "test-subject-token-path"
+//														}
+//													}
+//												]
+//											},
+//											"timeout": "10s"
+//										}
+//									]
+//								}
+//				}
+//			 }
+//		 },
+//}
+//`
+
+func BootstrapData() []byte {
+	// TODO: write the bootstrap file.
+	t := template.New("grpc")
+	_, err := t.Parse(grpcTemplate)
+	if err != nil {
+		return nil
+	}
+	out := &bytes.Buffer{}
+	t.Execute(out, map[string]interface{}{})
+
+	return out.Bytes()
+
+}
 
 // GenerateBootstrap will write a Istio bootstrap file in the location expected by gRPC, using
 // Istio environment variables:
@@ -78,9 +109,9 @@ func GenerateBootstrapTmpl() error {
 		return errors.New("missing GRPC_XDS_BOOTSTRAP")
 	}
 
-	if _, err := os.Stat(bootF); true || os.IsNotExist(err) {
+	if _, err := os.Stat(bootF); os.IsNotExist(err) {
 		// TODO: write the bootstrap file.
-		err := ioutil.WriteFile(bootF, []byte(template), 0700)
+		err := ioutil.WriteFile(bootF, BootstrapData(), 0700)
 		if err != nil {
 			return err
 		}

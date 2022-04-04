@@ -22,183 +22,172 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/mesh"
-	"github.com/costinm/grpc-mesh/echo-micro/proto"
 	"github.com/costinm/grpc-mesh/echo-micro/server"
-	"go.opencensus.io/zpages"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"google.golang.org/grpc/grpclog"
+
+	//"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"github.com/costinm/grpc-mesh/telemetry/otelgrpc"
 	"go.opentelemetry.io/contrib/instrumentation/host"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/contrib/instrumentation/runtime"
+
+	"go.opentelemetry.io/contrib/zpages"
+	"go.opentelemetry.io/otel/exporters/prometheus"
+
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
+
 	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/export/metric"
+	metric_controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
+	"go.opentelemetry.io/otel/sdk/metric/export/aggregation"
+	metric_processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
 	"go.opentelemetry.io/otel/sdk/metric/selector/simple"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
-
-	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
-	processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
-
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-)
-
-import (
-	"log"
-
-	"go.opencensus.io/plugin/ocgrpc"
-	"go.opencensus.io/plugin/runmetrics"
-
-	"google.golang.org/grpc/admin"
 	"google.golang.org/grpc/reflection"
 )
 
 // TODO: use otelhttptrace to get httptrace (low level client traces)
 
-func HttpRoundTripper() func(transport http.RoundTripper) http.RoundTripper {
-	return func(transport http.RoundTripper) http.RoundTripper {
-		return otelhttp.NewTransport(transport)
-	}
-}
+// OTel doesn't have metrics in grpc instrumentation.
+// When they do, we can switch from OpenCensus.
 
-func initOTel(ctx context.Context, kr *mesh.KRun) (func(), error) {
+//func HttpRoundTripper() func(transport http.RoundTripper) http.RoundTripper {
+//	return func(transport http.RoundTripper) http.RoundTripper {
+//		return otelhttp.NewTransport(transport)
+//	}
+//}
 
-	var exp trace.SpanExporter
-	var err error
-	exp, err = stdouttrace.New(
-		stdouttrace.WithWriter(os.Stderr),
-		// Use human readable output.
-		stdouttrace.WithPrettyPrint(),
-		// Do not print timestamps for the demo.
-		//stdouttrace.WithoutTimestamps(),
-	)
-	if err != nil {
-		return nil, err
-	}
+var (
+	log = grpclog.Component("uecho")
+)
 
-	r := resource.NewWithAttributes(semconv.SchemaURL,
-		semconv.ServiceNameKey.String(kr.Name))
+func initTracing(ctx context.Context, r *resource.Resource) func() {
+	// For traces, zpages seems better for debugging.
+	// Additional otel exporter can be added.
+	//exp, err = stdouttrace.New(
+	//	stdouttrace.WithWriter(os.Stderr),
+	//	// Use human readable output.
+	//	stdouttrace.WithPrettyPrint(),
+	//	// Do not print timestamps for the demo.
+	//	//stdouttrace.WithoutTimestamps(),
+	//)
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	// Span processor for tracez
+	sp := zpages.NewSpanProcessor()
+	thandler := zpages.NewTracezHandler(sp)
+	http.DefaultServeMux.Handle("/debug/tracez", thandler)
+
 	tp := trace.NewTracerProvider(
-		trace.WithBatcher(exp),
 		trace.WithSampler(trace.AlwaysSample()),
 		trace.WithResource(r),
+		//trace.WithBatcher(exp),
+		trace.WithSpanProcessor(sp),
 	)
+
 	otel.SetTracerProvider(tp)
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 
-	// =========== Metrics
-	var exporter metric.Exporter
-	exporter, err = stdoutmetric.New(
-		//stdoutmetric.WithPrettyPrint(),
-		stdoutmetric.WithWriter(os.Stderr))
-
-	if err != nil {
-		log.Fatalf("creating stdoutmetric exporter: %v", err)
+	return func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Fatal(err)
+		}
 	}
+}
 
-	pusher := controller.New(
-		processor.NewFactory(
+func initOTel(ctx context.Context, serviceName string) (func(), error) {
+	r := resource.NewWithAttributes(semconv.SchemaURL,
+		semconv.ServiceNameKey.String(serviceName))
+
+	tracingCleanup := initTracing(ctx, r)
+
+	// =========== Metrics
+
+	// Where to send the metrics
+	//exporter, err := stdoutmetric.New(
+	//	stdoutmetric.WithPrettyPrint(),
+	//	stdoutmetric.WithWriter(os.Stderr))
+	//if err != nil {
+	//	log.Fatalf("creating stdoutmetric exporter: %v", err)
+	//}
+
+	// Push controller for metrics
+	metricsController := metric_controller.New(
+		metric_processor.NewFactory(
 			simple.NewWithInexpensiveDistribution(),
-			exporter,
-			processor.WithMemory(true),
+			aggregation.CumulativeTemporalitySelector(), //exporter,
+			metric_processor.WithMemory(true),
 		),
-		controller.WithExporter(exporter),
-		controller.WithCollectPeriod(3*time.Second),
-		controller.WithResource(r),
-		// WithResource, WithCollectPeriod, WithPushTimeout
+		//metric_controller.WithExporter(exporter),
+		// default: 10s
+		// for push - interval between metric pushes
+		// for prom: do not recompute more often
+		//metric_controller.WithCollectPeriod(60*time.Second),
+		metric_controller.WithResource(r),
+		// WithResource, WithPushTimeout
 	)
 
-	if err = pusher.Start(ctx); err != nil {
-		log.Fatalf("starting push controller: %v", err)
+	config := prometheus.Config{
+		DefaultHistogramBoundaries: []float64{1, 2, 5, 10, 20, 50},
 	}
+	exporterp, err := prometheus.New(config, metricsController)
+	if err != nil {
+		return nil, err
+	}
+	http.HandleFunc("/metrics", exporterp.ServeHTTP)
 
-	global.SetMeterProvider(pusher)
+	//if err = metricsController.Start(ctx); err != nil {
+	//	log.Fatalf("starting push controller: %v", err)
+	//}
+
+	global.SetMeterProvider(metricsController)
 
 	// Global instrumentations
-	if err := runtime.Start(
-		runtime.WithMinimumReadMemStatsInterval(time.Second),
-	); err != nil {
-		log.Fatalln("failed to start runtime instrumentation:", err)
-	}
+	//if err := runtime.Start(
+	//	runtime.WithMinimumReadMemStatsInterval(time.Second),
+	//); err != nil {
+	//	log.Fatalln("failed to start runtime instrumentation:", err)
+	//}
 	// Host telemetry -
 	host.Start()
 
 	// End telemetry magic
 	return func() {
-		if err := pusher.Stop(ctx); err != nil {
+		if err := metricsController.Stop(ctx); err != nil {
 			log.Fatalf("stopping push controller: %v", err)
 		}
-		if err := tp.Shutdown(context.Background()); err != nil {
-			log.Fatal(err)
-		}
+		tracingCleanup()
 	}, nil
-	/*
-		kr.TransportWrapper = func(transport http.RoundTripper) http.RoundTripper {
-			return otelhttp.NewTransport(transport)
-		}
-		// Host telemetry -
-		host.Start()
-	*/
 }
 
-func OTELGRPCClient() []grpc.DialOption {
-	return []grpc.DialOption{
-		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
-		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor())}
-}
-
-func Run(port string) error {
-	h := &server.EchoGrpcHandler{}
-	lis, err := net.Listen("tcp", port)
-	if err != nil {
-		return err
+func Run(lis net.Listener) error {
+	h := &server.EchoGrpcHandler{
+		// Enable OpenTelemetry client side
+		DialOptions: []grpc.DialOption{
+			grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
+			grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
+		},
 	}
 
 	creds := insecure.NewCredentials()
 
 	grpcOptions := []grpc.ServerOption{
 		grpc.Creds(creds),
-		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
-	}
-
-	err = runmetrics.Enable(runmetrics.RunMetricOptions{
-		EnableCPU:    true,
-		EnableMemory: true,
-		Prefix:       "echo/",
-	})
-	if err != nil {
-		log.Println(err)
+		grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()),
+		grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
 	}
 
 	grpcServer := grpc.NewServer(grpcOptions...)
-	proto.RegisterEchoTestServiceServer(grpcServer, h)
-	admin.Register(grpcServer)
+	h.Register(grpcServer)
 	reflection.Register(grpcServer)
 
-	go func() {
-		err = grpcServer.Serve(lis)
-		if err != nil {
-			panic(err)
-		}
-	}()
-
-	// Status
-	mux := &http.ServeMux{}
-	zpages.Handle(mux, "/debug")
-
-	http.ListenAndServe("127.0.0.1:8081", mux)
-	// Wait for the process to be shutdown.
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	<-sigs
+	go grpcServer.Serve(lis)
 
 	return nil
 }
@@ -211,8 +200,24 @@ func Run(port string) error {
 // - 20M - same app, but proxyless gRPC
 // - 22M - plus opencensus, prom, zpages, reflection
 func main() {
-	err := Run(":8080")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "9280"
+	}
+	lis, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	initOTel(context.Background(), "echo")
+
+	err = Run(lis)
 	if err != nil {
 		fmt.Println("Error ", err)
 	}
+	go http.ListenAndServe("127.0.0.1:9281", http.DefaultServeMux)
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	<-sigs
+
 }

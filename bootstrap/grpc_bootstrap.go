@@ -16,10 +16,12 @@ package bootstrap
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 
 	"google.golang.org/protobuf/types/known/structpb"
@@ -44,12 +46,10 @@ const (
 // TODO use structs from gRPC lib if created/exported
 type Bootstrap struct {
 	XDSServers                 []XdsServer                    `json:"xds_servers,omitempty"`
-	Node                       *core.Node                   `json:"node,omitempty"`
+	Node                       *core.Node                     `json:"node,omitempty"`
 	CertProviders              map[string]CertificateProvider `json:"certificate_providers,omitempty"`
 	ServerListenerNameTemplate string                         `json:"server_listener_resource_name_template,omitempty"`
 }
-
-
 
 type ChannelCreds struct {
 	Type   string      `json:"type,omitempty"`
@@ -107,10 +107,10 @@ func (cp *CertificateProvider) UnmarshalJSON(data []byte) error {
 const FileWatcherCertProviderName = "file_watcher"
 
 type FileWatcherCertProviderConfig struct {
-	CertificateFile   string          `json:"certificate_file,omitempty"`
-	PrivateKeyFile    string          `json:"private_key_file,omitempty"`
-	CACertificateFile string          `json:"ca_certificate_file,omitempty"`
-	RefreshDuration   string          `json:"refresh_interval,omitempty"`
+	CertificateFile   string `json:"certificate_file,omitempty"`
+	PrivateKeyFile    string `json:"private_key_file,omitempty"`
+	CACertificateFile string `json:"ca_certificate_file,omitempty"`
+	RefreshDuration   string `json:"refresh_interval,omitempty"`
 }
 
 func (c *FileWatcherCertProviderConfig) FilePaths() []string {
@@ -158,8 +158,10 @@ type GenerateBootstrapOptions struct {
 	Locality         *core.Locality
 }
 
+const defaultXDSProxy = "/etc/istio/proxy/XDS"
+
 // GenerateBootstrap generates the bootstrap structure for gRPC XDS integration.
-func GenerateBootstrap(opts GenerateBootstrapOptions) (*Bootstrap, error) {
+func GenerateBootstrap(opts *GenerateBootstrapOptions) (*Bootstrap, error) {
 	xdsMeta, err := extractMeta(opts.NodeMetadata)
 	if err != nil {
 		return nil, fmt.Errorf("failed extracting xds metadata: %v", err)
@@ -169,6 +171,8 @@ func GenerateBootstrap(opts GenerateBootstrapOptions) (*Bootstrap, error) {
 	serverURI := opts.DiscoveryAddress
 	if opts.XdsUdsPath != "" {
 		serverURI = fmt.Sprintf("unix:///%s", opts.XdsUdsPath)
+	} else if _, err := os.Stat(defaultXDSProxy); !os.IsNotExist(err) {
+		serverURI = "unix://" + defaultXDSProxy
 	}
 
 	bootstrap := Bootstrap{
@@ -178,7 +182,7 @@ func GenerateBootstrap(opts GenerateBootstrapOptions) (*Bootstrap, error) {
 			ChannelCreds:   []ChannelCreds{{Type: "insecure"}},
 			ServerFeatures: []string{"xds_v3"},
 		}},
-		Node: &core.Node {
+		Node: &core.Node{
 			Id:       opts.ID,
 			Locality: opts.Locality,
 			Metadata: xdsMeta,
@@ -212,20 +216,33 @@ func extractMeta(rawMeta map[string]interface{}) (*structpb.Struct, error) {
 }
 
 // GenerateBootstrapFile generates and writes atomically as JSON to the given file path.
-func GenerateBootstrapFile(opts GenerateBootstrapOptions, path string) (*Bootstrap, error) {
+func GenerateBootstrapFile(opts *GenerateBootstrapOptions, path string) error {
 	bootstrap, err := GenerateBootstrap(opts)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	jsonData, err := json.MarshalIndent(bootstrap, "", "  ")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	//if err := file.AtomicWrite(path, jsonData, os.FileMode(0o644)); err != nil {
 	//	return nil, fmt.Errorf("failed writing to %s: %v", path, err)
 	//}
 	if err := ioutil.WriteFile(path, jsonData, os.FileMode(0o644)); err != nil {
-		return nil, fmt.Errorf("failed writing to %s: %v", path, err)
+		return fmt.Errorf("failed writing to %s: %v", path, err)
 	}
-	return bootstrap, nil
+	return nil
+}
+
+func Generate(opts *GenerateBootstrapOptions) error {
+	bootF := os.Getenv("GRPC_XDS_BOOTSTRAP")
+	if bootF == "" {
+		return errors.New("missing GRPC_XDS_BOOTSTRAP")
+	}
+
+	if _, err := os.Stat(bootF); os.IsNotExist(err) {
+		// TODO: write the bootstrap file.
+		GenerateBootstrapFile(opts, bootF)
+	}
+	return nil
 }

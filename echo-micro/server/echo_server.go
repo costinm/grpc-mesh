@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/costinm/grpc-mesh/echo-micro/proto"
+	"github.com/costinm/grpc-mesh/gen/proto/go/proto"
 	"github.com/hashicorp/go-multierror"
 	"golang.org/x/sync/semaphore"
 	"google.golang.org/grpc"
@@ -55,6 +55,11 @@ type EchoGrpcHandler struct {
 	Version      string
 	Cluster      string
 	IstioVersion string
+	DialOptions  []grpc.DialOption
+}
+
+func (h *EchoGrpcHandler) Register(grpcServer grpc.ServiceRegistrar) {
+	proto.RegisterEchoTestServiceServer(grpcServer, h)
 }
 
 func (h *EchoGrpcHandler) Echo(ctx context.Context, req *proto.EchoRequest) (*proto.EchoResponse, error) {
@@ -132,7 +137,7 @@ func (h *EchoGrpcHandler) ForwardEcho(ctx context.Context, req *proto.ForwardEch
 		throttle = time.NewTicker(sleepTime)
 	}
 
-	grpcConn, err := newClient(ctx, req)
+	grpcConn, err := h.newClient(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -245,11 +250,12 @@ const (
 	ConnectionTimeout = 2 * time.Second
 )
 
-func newClient(ctx context.Context, req *proto.ForwardEchoRequest) (*grpc.ClientConn, error) {
+func (h *EchoGrpcHandler) newClient(ctx context.Context, req *proto.ForwardEchoRequest) (*grpc.ClientConn, error) {
 	// NOTE: XDS load-balancing happens per-ForwardEchoRequest since we create a new client each time
 	rawURL := req.Url
 	var urlScheme string
 	var opts []grpc.DialOption
+	opts = append(opts, h.DialOptions...)
 	// grpc-go sets incorrect authority header
 	if i := strings.IndexByte(rawURL, ':'); i > 0 {
 		urlScheme = strings.ToLower(rawURL[0:i])
