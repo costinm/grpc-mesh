@@ -1,0 +1,65 @@
+# Manifest for local debug
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: echo-local
+  name: echo-local
+  namespace: test
+spec:
+  selector:
+    app: echo-local
+  type: ClusterIP
+
+  ports:
+    - name: grpc
+      port: 9080
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: WorkloadGroup
+metadata:
+  name: echo-local
+  namespace: test
+spec:
+  metadata:
+    labels:
+      app: echo-local
+#      app.kubernetes.io/name: echo-local
+#      app.kubernetes.io/version: "1.3.4"
+  template:
+    ports:
+      grpc: 9080
+    serviceAccount: default
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: WorkloadEntry
+metadata:
+  name: echo-local
+  namespace: test
+spec:
+  address: "127.0.0.1"
+  serviceAccount: default
+  labels:
+      app: echo-local
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: echo-local
+  namespace: test
+  labels:
+    kubernetes.io/service-name: echo-local
+addressType: IPv4
+ports:
+  - name: http
+    protocol: TCP
+    port: 9080
+endpoints:
+  - addresses:
+      # Loopback range not allowed
+      - "10.1.10.228"
+    conditions:
+      ready: true
+    hostname: echo
+    nodeName: node-1
+    zone: us-west2-a

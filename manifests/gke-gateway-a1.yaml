@@ -1,0 +1,40 @@
+# https://cloud.google.com/kubernetes-engine/docs/concepts/gateway-api
+kind: Gateway
+apiVersion: networking.x-k8s.io/v1alpha1
+metadata:
+  name: gke-internal
+  namespace: istio-system
+spec:
+  # Regional ILB
+  # Also gke-l7-rilb-mc for multicluster
+  gatewayClassName: gke-l7-rilb
+  listeners:
+    - protocol: HTTP
+      port: 80
+      routes:
+        kind: HTTPRoute
+---
+kind: Gateway
+apiVersion: networking.x-k8s.io/v1alpha1
+metadata:
+  name: gke-gateway
+  namespace: istio-system
+spec:
+  gatewayClassName: gke-l7-gxlb
+  listeners:
+    - protocol: HTTP
+      port: 80
+      routes:
+        kind: HTTPRoute
+    - protocol: HTTPS
+      routes:
+        kind: HTTPRoute
+      hostname: istiod.svc.i.webinf.info
+      port: 8443
+      tls:
+        mode: Terminate
+
+        certificateRef:
+          kind: Secret
+          group: v1
+          name: cert-istiod

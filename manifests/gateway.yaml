@@ -1,0 +1,78 @@
+# Expose Istio - using bih1 cluster, *.svc.i.webinf.info., k.webinf.info -   34.68.35.151 istio-ingressgateway
+# TODO: template on domain suffix
+kind: Gateway
+apiVersion: gateway.networking.k8s.io/v1alpha2
+metadata:
+  # Using the original istio name. If the deployment is deleted, the controller should create a new one.
+  # Note that controller is using the label  istio.io/gateway-name: istio-ingressgateway
+  # To migrate from manually deployed gateway to automatic, while keeping the IP you need to edit the service
+  # and remove selector: istio:ingressgateway
+  name: istio-ingressgateway
+  namespace: istio-system
+  annotations:
+    # labels and annotations added to both Service and Deployment
+    test: test1
+    #networking.istio.io/service-type: LoadBalancer
+  labels:
+    # To make this consistent with istio
+    istio: ingressgateway
+spec:
+  gatewayClassName: istio
+  # Alternative: use a different name, and link to a manually deployed Service and Deployment
+  # This will NOT start a deployment and will not attempt to modify the service, but any added port will need
+  # to be manually managed. Not recommended.
+#  addresses:
+#    - value: istio-ingressgateway.istio-system.svc.cluster.local
+#      type: Hostname
+  # value: IP # will set the IP on the load balancer.
+  # type IPAddress
+  listeners:
+    # For each https host using CertManager certs we create one listener.
+    - protocol: HTTPS
+      name: istiod
+      hostname: istiod.svc.i.webinf.info
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: cert-istiod
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+               kubernetes.io/metadata.name: istio-system
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
+
+    - name: http8080
+      port: 8080
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
+
+    - protocol: HTTPS
+      name: fortio
+      hostname: fortio.svc.i.webinf.info
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: cert-fortio
+      allowedRoutes:
+        namespaces:
+          from: "All"
+
+    # Minimal (port will also be optional soon). This would define
+    # a SNI router for all hosts ?
+    - name: egress1
+      protocol: SNI
+      port: 8555
+

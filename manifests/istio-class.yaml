@@ -1,0 +1,14 @@
+kind: GatewayClass
+apiVersion: gateway.networking.k8s.io/v1alpha2
+metadata:
+  name: istio
+spec:
+  controllerName: istio.io/istio
+status:
+  conditions:
+    # The test suite expects this
+    - status: "True"
+      type: Accepted
+      lastTransitionTime: "2022-03-17T22:39:11Z"
+      message: ok
+      reason: none

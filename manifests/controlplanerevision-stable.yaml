@@ -1,0 +1,13 @@
+apiVersion: mesh.cloud.google.com/v1beta1
+kind: ControlPlaneRevision
+metadata:
+  # Supported names: asm-managed-rapid, etc
+  name: asm-managed
+  namespace: istio-system
+  labels:
+    # When created by gcloud, this is set to "true".
+    # Also created-by: and owned-by mesh.googleapis.com
+    mesh.cloud.google.com/managed-cni-enabled: "false"
+spec:
+  type: managed_service
+  channel: regular
