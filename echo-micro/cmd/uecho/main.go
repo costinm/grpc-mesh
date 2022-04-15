@@ -23,6 +23,8 @@ import (
 	"syscall"
 
 	ocprom "contrib.go.opencensus.io/exporter/prometheus"
+	"github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/k8s"
+	"github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/mesh"
 	"github.com/costinm/grpc-mesh/bootstrap"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/prometheus/client_golang/prometheus"
@@ -31,6 +33,8 @@ import (
 	"go.opencensus.io/plugin/runmetrics"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/zpages"
+	"google.golang.org/grpc/binarylog"
+	pb "google.golang.org/grpc/binarylog/grpc_binarylog_v1"
 
 	"github.com/costinm/grpc-mesh/echo-micro/server"
 
@@ -60,6 +64,7 @@ import (
 
 var log = grpclog.Component("echo")
 
+// GRPCServer is the interface implemented by both grpc
 type GRPCServer interface {
 	RegisterService(*grpc.ServiceDesc, interface{})
 	Serve(net.Listener) error
@@ -72,12 +77,67 @@ type GRPCServer interface {
 // TODO: get certs, remote config, JWTs
 // TODO: tunnels
 func Run(lis net.Listener) (func(), error) {
-	zl, _ := zap.NewDevelopment(zap.AddCallerSkip(4))
+	// Configure zap as a logger for grpc.
+	zl, _ := zap.NewProduction(zap.AddCallerSkip(4))
 	grpc_zap.ReplaceGrpcLoggerV2WithVerbosity(zl, 99)
 
 	alwaysLoggingDeciderServer := func(ctx context.Context, fullMethodName string, servingObject interface{}) bool { return true }
 	alwaysLoggingDeciderClient := func(ctx context.Context, fullMethodName string) bool { return true }
 
+	// Init metrics and telemetry
+	cleanup, err := initTel(context.Background(), "echo")
+	if err != nil {
+		return nil, err
+	}
+
+	creds, _ := xdscreds.NewServerCredentials(xdscreds.ServerOptions{
+		FallbackCreds: insecure.NewCredentials()})
+
+	grpcOptions := []grpc.ServerOption{
+		grpc.Creds(creds),
+		grpc_middleware.WithStreamServerChain(
+			otelgrpc.StreamServerInterceptor(),
+			grpc_zap.StreamServerInterceptor(zl),
+			grpc_zap.PayloadStreamServerInterceptor(zl, alwaysLoggingDeciderServer)),
+		grpc_middleware.WithUnaryServerChain(
+			otelgrpc.UnaryServerInterceptor(),
+			grpc_zap.UnaryServerInterceptor(zl),
+			grpc_zap.PayloadUnaryServerInterceptor(zl, alwaysLoggingDeciderServer)),
+	}
+
+	var grpcServer GRPCServer
+	if os.Getenv("GRPC_XDS_BOOTSTRAP") != "" {
+		// Only needs to be set to a file - if the file doesn't exist, create it.
+		// Get mesh config from the current cluster
+		kr := mesh.New()
+
+		// Using a K8s Client
+		kc := &k8s.K8S{Mesh: kr}
+		err := kc.K8SClient(ctx)
+		if err != nil {
+			return nil, err
+		}
+		kr.Cfg = kc
+		kr.TokenProvider = kc
+
+		// Load the config map with mesh-env
+		kr.LoadConfig(ctx)
+
+		bootstrap.GenerateBootstrap(nil)
+		// Replaces: grpc.NewServer(grpcOptions...)
+		grpcServer = xds.NewGRPCServer(grpcOptions...)
+	} else {
+		bootstrap.Init()
+		grpcServer = grpc.NewServer(grpcOptions...)
+	}
+
+	// Special handling for startup without env variable set
+
+	// Generate the bootstrap if the file is missing ( injection-less )
+	// using cloudrun-mesh auto-detection code
+
+	// TODO: Generate certs if missing
+	// Configure the client side options.
 	h := &server.EchoGrpcHandler{
 		// Enable OpenTelemetry client side
 		DialOptions: []grpc.DialOption{
@@ -90,58 +150,16 @@ func Run(lis net.Listener) (func(), error) {
 		},
 	}
 
-	cleanup, err := initTel(context.Background(), "echo")
-	if err != nil {
-		return nil, err
-	}
-	var grpcServer GRPCServer
-	if os.Getenv("GRPC_XDS_BOOTSTRAP") != "" {
-		// Only needs to be set to a file - if the file doesn't exist, create it.
-		bootstrap.Generate(&bootstrap.GenerateBootstrapOptions{})
-		creds, _ := xdscreds.NewServerCredentials(xdscreds.ServerOptions{FallbackCreds: insecure.NewCredentials()})
-
-		grpcOptions := []grpc.ServerOption{
-			grpc.Creds(creds),
-			grpc_middleware.WithStreamServerChain(
-				otelgrpc.StreamServerInterceptor(),
-				grpc_zap.StreamServerInterceptor(zl),
-				grpc_zap.PayloadStreamServerInterceptor(zl, alwaysLoggingDeciderServer)),
-			grpc_middleware.WithUnaryServerChain(
-				otelgrpc.UnaryServerInterceptor(),
-				grpc_zap.UnaryServerInterceptor(zl),
-				grpc_zap.PayloadUnaryServerInterceptor(zl, alwaysLoggingDeciderServer)),
-		}
-
-		// Replaces: grpc.NewServer(grpcOptions...)
-		grpcServer = xds.NewGRPCServer(grpcOptions...)
-
-	} else {
-		creds := insecure.NewCredentials()
-
-		grpcOptions := []grpc.ServerOption{
-			grpc.Creds(creds),
-			grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()),
-			grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
-			grpc.UnaryInterceptor(grpc_zap.UnaryServerInterceptor(zl)),
-			grpc.StreamInterceptor(grpc_zap.StreamServerInterceptor(zl)),
-		}
-
-		grpcServer = grpc.NewServer(grpcOptions...)
-	}
-
-	// Special handling for startup without env variable set
-
-	// Generate the bootstrap if the file is missing ( injection-less )
-	// using cloudrun-mesh auto-detection code
-
-	// Generate certs if missing
-
 	h.Register(grpcServer)
 
 	// add the standard grpc health check
 	healthServer := health.NewServer()
+
 	grpcHealth.RegisterHealthServer(grpcServer, healthServer)
 	reflection.Register(grpcServer)
+
+	// Log all requests. This is a global setting, captures all requests.
+	initBinlog()
 
 	// grpcdebug support
 	_, err = admin.Register(grpcServer)
@@ -159,6 +177,23 @@ func Run(lis net.Listener) (func(), error) {
 		}
 	}()
 	return cleanup, nil
+}
+
+type DebugBinaryLogSink struct {
+}
+
+func (d DebugBinaryLogSink) Write(entry *pb.GrpcLogEntry) error {
+	log.Info("binarylog", "proto", entry.String())
+	return nil
+}
+
+func (d DebugBinaryLogSink) Close() error {
+	return nil
+}
+
+// Debug/test: set binary log
+func initBinlog() {
+	binarylog.SetSink(&DebugBinaryLogSink{})
 }
 
 func initTel(background context.Context, s string) (func(), error) {
@@ -203,6 +238,7 @@ func initTel(background context.Context, s string) (func(), error) {
 }
 
 func main() {
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "9080"

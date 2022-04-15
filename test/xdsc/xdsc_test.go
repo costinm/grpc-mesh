@@ -167,16 +167,18 @@ func TestTD(t *testing.T) {
 	m := map[string]interface{}{}
 	m["TRAFFICDIRECTOR_NETWORK_NAME"] = "default"
 	m["TRAFFICDIRECTOR_GCP_PROJECT_NUMBER"] = kr.ProjectNumber
+	m["INSTANCE_IP"] = "10.48.0.63"
 
 	xdsConfig := &xdsc.Config{
 		Namespace: kr.Namespace,
 		Workload:  kr.Name + "-" + "10.10.1.1",
 		Meta:      m,
-		NodeType:  "sidecar",
-		IP:        "10.10.1.1",
-		Context:   ctx,
-		Locality:  kr.ClusterLocation,
-		NodeId: fmt.Sprintf("projects/%s/networks/default/nodes/ENVOY_NODE_ID",
+
+		NodeType: "sidecar",
+		IP:       "10.10.1.1",
+		Context:  ctx,
+		Locality: kr.ClusterLocation,
+		NodeId: fmt.Sprintf("projects/%s/networks/default/nodes/1234",
 			kr.ProjectNumber),
 
 		GrpcOpts: []grpc.DialOption{

@@ -2,6 +2,7 @@
 
 Adopting the style of 'buf.build', and keeping the protos dependency-free (except the proto itself)
 
+
 ## BSR
 
 auto-generated code:
@@ -21,4 +22,6 @@ grpcurl -protoset <(buf build -o -) ...
 - private ca
 - meshca
 - istio ca
-- 
+- grpc/grpc-proto - except tls/provider/meshca
+- simplified version of envoy
+- konectivity from kde

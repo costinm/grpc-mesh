@@ -76,3 +76,33 @@ status:
 	kubectl -n echo-grpc get httproute.gateway.networking.k8s.io   -o yaml
 
 ls/all:
+
+
+td-setup: NEG_NAME=k8s1-5e434f9a-istio-system-hgate-istiod-15012-876c9370
+	# backend created automatically via ServiceExport  or cloud.google.com/neg: '{"exposed_ports":{"8080":{}}}' annotation
+	gcloud compute network-endpoint-groups list
+	# kubectl -n fortio-asm get serviceimports.net.gke.io
+	gcloud compute health-checks create grpc istiod-hc \
+     	--use-serving-port
+	gcloud compute backend-services create istiod-service    --global    --load-balancing-scheme=INTERNAL_SELF_MANAGED    --protocol=GRPC    --health-checks istiod-hc
+	gcloud compute backend-services add-backend istiod-service \
+       --global \
+       --network-endpoint-group ${NEG_NAME} \
+       --network-endpoint-group-zone us-central1-c \
+       --balancing-mode RATE \
+       --max-rate-per-endpoint 5
+	gcloud  compute url-maps create istiod --default-service istiod-service
+	gcloud compute url-maps add-path-matcher istiod  \
+      --default-service istiod-service \
+      --path-matcher-name istiod \
+      --new-hosts istiod # This is the host that will be used in xds:// requests !
+	gcloud compute target-grpc-proxies create istiod \
+     --url-map istiod \
+     --validate-for-proxyless
+	gcloud compute forwarding-rules create istiod \
+     --global \
+     --load-balancing-scheme=INTERNAL_SELF_MANAGED \
+     --address=0.0.0.0 \
+     --target-grpc-proxy=istiod \
+     --ports 15010 \
+     --network default

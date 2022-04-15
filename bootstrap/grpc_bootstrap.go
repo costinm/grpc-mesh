@@ -162,6 +162,14 @@ const defaultXDSProxy = "/etc/istio/proxy/XDS"
 
 // GenerateBootstrap generates the bootstrap structure for gRPC XDS integration.
 func GenerateBootstrap(opts *GenerateBootstrapOptions) (*Bootstrap, error) {
+	if opts == nil {
+		opts = &GenerateBootstrapOptions{}
+		if _, err := os.Stat(defaultXDSProxy); os.IsNotExist(err) {
+			// TODO: Detect XDS address
+			opts.DiscoveryAddress = "localhost:15010"
+		}
+	}
+
 	xdsMeta, err := extractMeta(opts.NodeMetadata)
 	if err != nil {
 		return nil, fmt.Errorf("failed extracting xds metadata: %v", err)
@@ -201,6 +209,21 @@ func GenerateBootstrap(opts *GenerateBootstrapOptions) (*Bootstrap, error) {
 					RefreshDuration:   "600s",
 				},
 			},
+		}
+	} else {
+		base := "./var/run/secrets/workload-spiffe-credentials/"
+		if _, err := os.Stat(base + "ca_certificates.pem"); !os.IsNotExist(err) {
+			bootstrap.CertProviders = map[string]CertificateProvider{
+				"default": {
+					PluginName: "file_watcher",
+					Config: FileWatcherCertProviderConfig{
+						PrivateKeyFile:    path.Join(opts.CertDir, "private_key.pem"),
+						CertificateFile:   path.Join(base, "certificates.pem"),
+						CACertificateFile: path.Join(base, "ca_certificates.pem"),
+						RefreshDuration:   "600s",
+					},
+				},
+			}
 		}
 	}
 
@@ -245,4 +268,17 @@ func Generate(opts *GenerateBootstrapOptions) error {
 		GenerateBootstrapFile(opts, bootF)
 	}
 	return nil
+}
+
+// Init will handle GRPC bootstrap initialization. This will load or create a bootstrap file,
+// and perform the XDS specific initialization.
+func Init() {
+	if os.Getenv("GRPC_XDS_BOOTSTRAP") != "" {
+		// User specified the env variable: if the file exists, load it, otherwise generate it.
+
+		return
+	}
+
+	// No bootstrap env - will use the internal Test methods to hook up.
+
 }
