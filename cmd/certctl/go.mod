@@ -1,12 +1,12 @@
 module github.com/costinm/grpc-mesh/cmd/certctl
 
-go 1.17
+go 1.18
 
 replace github.com/costinm/grpc-mesh => ../..
 
 replace github.com/costinm/grpc-mesh/cas => ../../cas
 
-replace github.com/costinm/grpc-mesh/gen/proto/go => ../../gen/proto/go
+replace github.com/costinm/grpc-mesh/gen/proto => ../../gen/proto
 
 replace github.com/GoogleCloudPlatform/cloud-run-mesh => ../../../cloud-run-mesh
 
@@ -22,7 +22,6 @@ require (
 	cloud.google.com/go/security v1.3.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
-	github.com/costinm/grpc-mesh/gen/proto/go v0.0.0-00010101000000-000000000000 // indirect
 	github.com/creack/pty v1.1.17 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect

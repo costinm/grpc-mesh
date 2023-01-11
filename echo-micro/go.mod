@@ -8,7 +8,7 @@ replace github.com/costinm/grpc-mesh/telemetry/otelgrpc => ../telemetry/otelgrpc
 
 replace github.com/costinm/grpc-mesh/telemetry/logs/zap => ../telemetry/logs/zap
 
-replace github.com/costinm/grpc-mesh/gen/proto/go => ../gen/proto/go
+replace github.com/costinm/grpc-mesh/gen/proto => ../gen/proto
 
 replace github.com/costinm/grpc-mesh => ../
 
@@ -21,7 +21,6 @@ replace github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/k8s => ../../cloud-run
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.0
 	github.com/costinm/grpc-mesh/bootstrap v0.0.0-00010101000000-000000000000
-	github.com/costinm/grpc-mesh/gen/proto/go v0.0.0-00010101000000-000000000000
 	github.com/costinm/grpc-mesh/telemetry/logs/zap v0.0.0-00010101000000-000000000000
 	github.com/costinm/grpc-mesh/telemetry/otelgrpc v0.0.0-00010101000000-000000000000
 	github.com/google/uuid v1.3.0 // indirect
@@ -46,6 +45,7 @@ require (
 	cloud.google.com/go/container v1.2.0 // indirect
 	cloud.google.com/go/security v1.3.0 // indirect
 	github.com/GoogleCloudPlatform/cloud-run-mesh v0.0.0-20220128230121-cac57262761b
+	github.com/costinm/grpc-mesh/gen/proto v0.0.0-00010101000000-000000000000
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/zapr v1.2.3
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
