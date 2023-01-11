@@ -21,7 +21,8 @@ import "grpc/core/stats.proto";
 option java_multiple_files = true;
 option java_package = "io.grpc.testing";
 option java_outer_classname = "StatsProto";
-option go_package="github.com/costinm/grpc-mesh/proto/grpc/testing";
+
+option go_package="github.com/costinm/grpc-mesh/gen/proto/go/grpc/testing";
 
 message ServerStats {
   // wall clock time change in seconds since last reset

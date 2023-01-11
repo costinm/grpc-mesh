@@ -4,8 +4,9 @@ syntax = "proto3";
 // URL: /PACKAGE.SERVICE/METHOD
 package envoy.service.discovery.v3;
 import "xds/envoy_simplified.proto";
+import "xds/delta.proto";
 
-option go_package="github.com/costinm/grpc-mesh/gen/go/envoy/service/discovery";
+option go_package="github.com/costinm/grpc-mesh/gen/proto/go/envoy/service/discovery/v3";
 
 //	ServiceName: "envoy.service.discovery.v2.AggregatedDiscoveryService",
 
@@ -22,4 +23,5 @@ option go_package="github.com/costinm/grpc-mesh/gen/go/envoy/service/discovery";
 // the multiplexed singleton APIs at the Envoy instance and management server.
 service AggregatedDiscoveryService {
     rpc StreamAggregatedResources(stream xds.DiscoveryRequest) returns (stream xds.DiscoveryResponse) {}
+    rpc DeltaAggregatedResources(stream xds.DeltaDiscoveryRequest) returns (stream xds.DeltaDiscoveryResponse) {}
 }

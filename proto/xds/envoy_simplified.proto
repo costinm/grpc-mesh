@@ -130,6 +130,11 @@ message DiscoveryResponse {
     // DiscoveryRequest bearing the nonce. The nonce is optional and is not
     // required for non-stream based xDS implementations.
     string nonce = 5;
+
+    message ControlPlane {
+        string Identifier = 1;
+    }
+    ControlPlane controlPlane = 6;
 }
 
 
