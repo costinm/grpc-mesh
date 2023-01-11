@@ -22,7 +22,7 @@ import (
 	"syscall"
 
 	"github.com/costinm/grpc-mesh/echo-micro/server"
-	"github.com/costinm/grpc-mesh/gen/proto/go/proto"
+	"github.com/costinm/grpc-mesh/gen/grpc-go/proto"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

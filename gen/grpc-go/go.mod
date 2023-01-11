@@ -1,4 +1,4 @@
-module github.com/costinm/grpc-mesh/gen/connect-go
+module github.com/costinm/grpc-mesh/gen/grpc-go
 
 go 1.19
 

@@ -21,7 +21,6 @@
 package testing
 
 import (
-	testing "github.com/costinm/grpc-mesh/gen/proto/go/grpc/testing"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -542,9 +541,9 @@ type ClientConfig struct {
 	AsyncClientThreads int32   `protobuf:"varint,7,opt,name=async_client_threads,json=asyncClientThreads,proto3" json:"async_client_threads,omitempty"`
 	RpcType            RpcType `protobuf:"varint,8,opt,name=rpc_type,json=rpcType,proto3,enum=grpc.testing.RpcType" json:"rpc_type,omitempty"`
 	// The requested load for the entire client (aggregated over all the threads).
-	LoadParams      *LoadParams              `protobuf:"bytes,10,opt,name=load_params,json=loadParams,proto3" json:"load_params,omitempty"`
-	PayloadConfig   *PayloadConfig           `protobuf:"bytes,11,opt,name=payload_config,json=payloadConfig,proto3" json:"payload_config,omitempty"`
-	HistogramParams *testing.HistogramParams `protobuf:"bytes,12,opt,name=histogram_params,json=histogramParams,proto3" json:"histogram_params,omitempty"`
+	LoadParams      *LoadParams      `protobuf:"bytes,10,opt,name=load_params,json=loadParams,proto3" json:"load_params,omitempty"`
+	PayloadConfig   *PayloadConfig   `protobuf:"bytes,11,opt,name=payload_config,json=payloadConfig,proto3" json:"payload_config,omitempty"`
+	HistogramParams *HistogramParams `protobuf:"bytes,12,opt,name=histogram_params,json=histogramParams,proto3" json:"histogram_params,omitempty"`
 	// Specify the cores we should run the client on, if desired
 	CoreList  []int32 `protobuf:"varint,13,rep,packed,name=core_list,json=coreList,proto3" json:"core_list,omitempty"`
 	CoreLimit int32   `protobuf:"varint,14,opt,name=core_limit,json=coreLimit,proto3" json:"core_limit,omitempty"`
@@ -659,7 +658,7 @@ func (x *ClientConfig) GetPayloadConfig() *PayloadConfig {
 	return nil
 }
 
-func (x *ClientConfig) GetHistogramParams() *testing.HistogramParams {
+func (x *ClientConfig) GetHistogramParams() *HistogramParams {
 	if x != nil {
 		return x.HistogramParams
 	}
@@ -734,7 +733,7 @@ type ClientStatus struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Stats *testing.ClientStats `protobuf:"bytes,1,opt,name=stats,proto3" json:"stats,omitempty"`
+	Stats *ClientStats `protobuf:"bytes,1,opt,name=stats,proto3" json:"stats,omitempty"`
 }
 
 func (x *ClientStatus) Reset() {
@@ -769,7 +768,7 @@ func (*ClientStatus) Descriptor() ([]byte, []int) {
 	return file_grpc_testing_control_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *ClientStatus) GetStats() *testing.ClientStats {
+func (x *ClientStatus) GetStats() *ClientStats {
 	if x != nil {
 		return x.Stats
 	}
@@ -1139,7 +1138,7 @@ type ServerStatus struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Stats *testing.ServerStats `protobuf:"bytes,1,opt,name=stats,proto3" json:"stats,omitempty"`
+	Stats *ServerStats `protobuf:"bytes,1,opt,name=stats,proto3" json:"stats,omitempty"`
 	// the port bound by the server
 	Port int32 `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
 	// Number of cores available to the server
@@ -1178,7 +1177,7 @@ func (*ServerStatus) Descriptor() ([]byte, []int) {
 	return file_grpc_testing_control_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *ServerStatus) GetStats() *testing.ServerStats {
+func (x *ServerStatus) GetStats() *ServerStats {
 	if x != nil {
 		return x.Stats
 	}
@@ -1693,11 +1692,11 @@ type ScenarioResult struct {
 	// Inputs used to run the scenario.
 	Scenario *Scenario `protobuf:"bytes,1,opt,name=scenario,proto3" json:"scenario,omitempty"`
 	// Histograms from all clients merged into one histogram.
-	Latencies *testing.HistogramData `protobuf:"bytes,2,opt,name=latencies,proto3" json:"latencies,omitempty"`
+	Latencies *HistogramData `protobuf:"bytes,2,opt,name=latencies,proto3" json:"latencies,omitempty"`
 	// Client stats for each client
-	ClientStats []*testing.ClientStats `protobuf:"bytes,3,rep,name=client_stats,json=clientStats,proto3" json:"client_stats,omitempty"`
+	ClientStats []*ClientStats `protobuf:"bytes,3,rep,name=client_stats,json=clientStats,proto3" json:"client_stats,omitempty"`
 	// Server stats for each server
-	ServerStats []*testing.ServerStats `protobuf:"bytes,4,rep,name=server_stats,json=serverStats,proto3" json:"server_stats,omitempty"`
+	ServerStats []*ServerStats `protobuf:"bytes,4,rep,name=server_stats,json=serverStats,proto3" json:"server_stats,omitempty"`
 	// Number of cores available to each server
 	ServerCores []int32 `protobuf:"varint,5,rep,packed,name=server_cores,json=serverCores,proto3" json:"server_cores,omitempty"`
 	// An after-the-fact computed summary
@@ -1706,7 +1705,7 @@ type ScenarioResult struct {
 	ClientSuccess []bool `protobuf:"varint,7,rep,packed,name=client_success,json=clientSuccess,proto3" json:"client_success,omitempty"`
 	ServerSuccess []bool `protobuf:"varint,8,rep,packed,name=server_success,json=serverSuccess,proto3" json:"server_success,omitempty"`
 	// Number of failed requests (one row per status code seen)
-	RequestResults []*testing.RequestResultCount `protobuf:"bytes,9,rep,name=request_results,json=requestResults,proto3" json:"request_results,omitempty"`
+	RequestResults []*RequestResultCount `protobuf:"bytes,9,rep,name=request_results,json=requestResults,proto3" json:"request_results,omitempty"`
 }
 
 func (x *ScenarioResult) Reset() {
@@ -1748,21 +1747,21 @@ func (x *ScenarioResult) GetScenario() *Scenario {
 	return nil
 }
 
-func (x *ScenarioResult) GetLatencies() *testing.HistogramData {
+func (x *ScenarioResult) GetLatencies() *HistogramData {
 	if x != nil {
 		return x.Latencies
 	}
 	return nil
 }
 
-func (x *ScenarioResult) GetClientStats() []*testing.ClientStats {
+func (x *ScenarioResult) GetClientStats() []*ClientStats {
 	if x != nil {
 		return x.ClientStats
 	}
 	return nil
 }
 
-func (x *ScenarioResult) GetServerStats() []*testing.ServerStats {
+func (x *ScenarioResult) GetServerStats() []*ServerStats {
 	if x != nil {
 		return x.ServerStats
 	}
@@ -1797,7 +1796,7 @@ func (x *ScenarioResult) GetServerSuccess() []bool {
 	return nil
 }
 
-func (x *ScenarioResult) GetRequestResults() []*testing.RequestResultCount {
+func (x *ScenarioResult) GetRequestResults() []*RequestResultCount {
 	if x != nil {
 		return x.RequestResults
 	}
@@ -2103,12 +2102,13 @@ var file_grpc_testing_control_proto_rawDesc = []byte{
 	0x15, 0x53, 0x54, 0x52, 0x45, 0x41, 0x4d, 0x49, 0x4e, 0x47, 0x5f, 0x46, 0x52, 0x4f, 0x4d, 0x5f,
 	0x53, 0x45, 0x52, 0x56, 0x45, 0x52, 0x10, 0x03, 0x12, 0x17, 0x0a, 0x13, 0x53, 0x54, 0x52, 0x45,
 	0x41, 0x4d, 0x49, 0x4e, 0x47, 0x5f, 0x42, 0x4f, 0x54, 0x48, 0x5f, 0x57, 0x41, 0x59, 0x53, 0x10,
-	0x04, 0x42, 0x52, 0x0a, 0x0f, 0x69, 0x6f, 0x2e, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x74, 0x65, 0x73,
+	0x04, 0x42, 0x59, 0x0a, 0x0f, 0x69, 0x6f, 0x2e, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x74, 0x65, 0x73,
 	0x74, 0x69, 0x6e, 0x67, 0x42, 0x0c, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2f, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
 	0x2f, 0x63, 0x6f, 0x73, 0x74, 0x69, 0x6e, 0x6d, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2d, 0x6d, 0x65,
-	0x73, 0x68, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x74, 0x65,
-	0x73, 0x74, 0x69, 0x6e, 0x67, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x68, 0x2f, 0x67, 0x65, 0x6e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x2f,
+	0x67, 0x72, 0x70, 0x63, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2126,34 +2126,34 @@ func file_grpc_testing_control_proto_rawDescGZIP() []byte {
 var file_grpc_testing_control_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
 var file_grpc_testing_control_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_grpc_testing_control_proto_goTypes = []interface{}{
-	(ClientType)(0),                    // 0: grpc.testing.ClientType
-	(ServerType)(0),                    // 1: grpc.testing.ServerType
-	(RpcType)(0),                       // 2: grpc.testing.RpcType
-	(*PoissonParams)(nil),              // 3: grpc.testing.PoissonParams
-	(*ClosedLoopParams)(nil),           // 4: grpc.testing.ClosedLoopParams
-	(*LoadParams)(nil),                 // 5: grpc.testing.LoadParams
-	(*SecurityParams)(nil),             // 6: grpc.testing.SecurityParams
-	(*ChannelArg)(nil),                 // 7: grpc.testing.ChannelArg
-	(*ClientConfig)(nil),               // 8: grpc.testing.ClientConfig
-	(*ClientStatus)(nil),               // 9: grpc.testing.ClientStatus
-	(*Mark)(nil),                       // 10: grpc.testing.Mark
-	(*ClientArgs)(nil),                 // 11: grpc.testing.ClientArgs
-	(*ServerConfig)(nil),               // 12: grpc.testing.ServerConfig
-	(*ServerArgs)(nil),                 // 13: grpc.testing.ServerArgs
-	(*ServerStatus)(nil),               // 14: grpc.testing.ServerStatus
-	(*CoreRequest)(nil),                // 15: grpc.testing.CoreRequest
-	(*CoreResponse)(nil),               // 16: grpc.testing.CoreResponse
-	(*Void)(nil),                       // 17: grpc.testing.Void
-	(*Scenario)(nil),                   // 18: grpc.testing.Scenario
-	(*Scenarios)(nil),                  // 19: grpc.testing.Scenarios
-	(*ScenarioResultSummary)(nil),      // 20: grpc.testing.ScenarioResultSummary
-	(*ScenarioResult)(nil),             // 21: grpc.testing.ScenarioResult
-	(*PayloadConfig)(nil),              // 22: grpc.testing.PayloadConfig
-	(*testing.HistogramParams)(nil),    // 23: grpc.testing.HistogramParams
-	(*testing.ClientStats)(nil),        // 24: grpc.testing.ClientStats
-	(*testing.ServerStats)(nil),        // 25: grpc.testing.ServerStats
-	(*testing.HistogramData)(nil),      // 26: grpc.testing.HistogramData
-	(*testing.RequestResultCount)(nil), // 27: grpc.testing.RequestResultCount
+	(ClientType)(0),               // 0: grpc.testing.ClientType
+	(ServerType)(0),               // 1: grpc.testing.ServerType
+	(RpcType)(0),                  // 2: grpc.testing.RpcType
+	(*PoissonParams)(nil),         // 3: grpc.testing.PoissonParams
+	(*ClosedLoopParams)(nil),      // 4: grpc.testing.ClosedLoopParams
+	(*LoadParams)(nil),            // 5: grpc.testing.LoadParams
+	(*SecurityParams)(nil),        // 6: grpc.testing.SecurityParams
+	(*ChannelArg)(nil),            // 7: grpc.testing.ChannelArg
+	(*ClientConfig)(nil),          // 8: grpc.testing.ClientConfig
+	(*ClientStatus)(nil),          // 9: grpc.testing.ClientStatus
+	(*Mark)(nil),                  // 10: grpc.testing.Mark
+	(*ClientArgs)(nil),            // 11: grpc.testing.ClientArgs
+	(*ServerConfig)(nil),          // 12: grpc.testing.ServerConfig
+	(*ServerArgs)(nil),            // 13: grpc.testing.ServerArgs
+	(*ServerStatus)(nil),          // 14: grpc.testing.ServerStatus
+	(*CoreRequest)(nil),           // 15: grpc.testing.CoreRequest
+	(*CoreResponse)(nil),          // 16: grpc.testing.CoreResponse
+	(*Void)(nil),                  // 17: grpc.testing.Void
+	(*Scenario)(nil),              // 18: grpc.testing.Scenario
+	(*Scenarios)(nil),             // 19: grpc.testing.Scenarios
+	(*ScenarioResultSummary)(nil), // 20: grpc.testing.ScenarioResultSummary
+	(*ScenarioResult)(nil),        // 21: grpc.testing.ScenarioResult
+	(*PayloadConfig)(nil),         // 22: grpc.testing.PayloadConfig
+	(*HistogramParams)(nil),       // 23: grpc.testing.HistogramParams
+	(*ClientStats)(nil),           // 24: grpc.testing.ClientStats
+	(*ServerStats)(nil),           // 25: grpc.testing.ServerStats
+	(*HistogramData)(nil),         // 26: grpc.testing.HistogramData
+	(*RequestResultCount)(nil),    // 27: grpc.testing.RequestResultCount
 }
 var file_grpc_testing_control_proto_depIdxs = []int32{
 	4,  // 0: grpc.testing.LoadParams.closed_loop:type_name -> grpc.testing.ClosedLoopParams
@@ -2197,6 +2197,7 @@ func file_grpc_testing_control_proto_init() {
 		return
 	}
 	file_grpc_testing_payloads_proto_init()
+	file_grpc_testing_stats_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_grpc_testing_control_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PoissonParams); i {

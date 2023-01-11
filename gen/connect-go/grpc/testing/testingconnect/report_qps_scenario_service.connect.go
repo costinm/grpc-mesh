@@ -8,7 +8,7 @@ import (
 	context "context"
 	errors "errors"
 	connect_go "github.com/bufbuild/connect-go"
-	testing "github.com/costinm/grpc-mesh/proto/grpc/testing"
+	testing "github.com/costinm/grpc-mesh/gen/proto/go/grpc/testing"
 	http "net/http"
 	strings "strings"
 )
