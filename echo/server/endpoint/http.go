@@ -126,7 +126,7 @@ func (s *httpInstance) Start(onReady OnReadyFunc) error {
 		fmt.Printf("Listening HTTP/1.1 on %v\n", port)
 	}
 
-	// Start serving HTTP traffic.
+	// RoundTripStart serving HTTP traffic.
 	go func() {
 		err := s.server.Serve(listener)
 		epLog.Warnf("Port %d listener terminated with error: %v", port, err)

@@ -62,12 +62,13 @@ Node will include:
 - UserAgentVersionTYpe ''
 - ClientFeatures - 'envoy.lb.does_not_support_overprovisioning'
 
-### Debugging
+### Debugging and tools
 
 - go install -v github.com/grpc-ecosystem/grpcdebug@latest
   go install -v  github.com/bojand/ghz/cmd/ghz
 - go install -v  github.com/bojand/ghz/cmd/ghz-web
   go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+
 # Components
 
 ### xdsc
@@ -99,3 +100,11 @@ variations to evaluate code size impact.
 Plugin for IstiodCA, mostly cut&pasted from meshca. Ideally should be merged upstream.
 
   
+## Testing
+
+
+```shell
+
+go test -tags=integ ./tests/integration/pilot/ -v -run TestTraffic/virtualservice/shifting-80/proxyless-grpc
+
+```

@@ -24,9 +24,9 @@ import (
 )
 
 var (
-	// DefaultGRPCDialFunc just calls grpc.Dial directly, with no alterations to the arguments.
+	// DefaultGRPCDialFunc just calls grpc.RoundTripStart directly, with no alterations to the arguments.
 	DefaultGRPCDialFunc = grpc.DialContext
-	// DefaultWebsocketDialFunc just calls dialer.Dial, with no alterations to the arguments.
+	// DefaultWebsocketDialFunc just calls dialer.RoundTripStart, with no alterations to the arguments.
 	DefaultWebsocketDialFunc = func(dialer *websocket.Dialer, urlStr string, requestHeader http.Header) (*websocket.Conn, *http.Response, error) {
 		return dialer.Dial(urlStr, requestHeader)
 	}
@@ -34,7 +34,7 @@ var (
 	DefaultHTTPDoFunc = func(client *http.Client, req *http.Request) (*http.Response, error) {
 		return client.Do(req)
 	}
-	// DefaultTCPDialFunc just calls dialer.Dial, with no alterations to the arguments.
+	// DefaultTCPDialFunc just calls dialer.RoundTripStart, with no alterations to the arguments.
 	DefaultTCPDialFunc = func(dialer net.Dialer, ctx context.Context, address string) (net.Conn, error) {
 		return dialer.DialContext(ctx, "tcp", address)
 	}

@@ -27,8 +27,10 @@ import (
 	"time"
 
 	"github.com/costinm/grpc-mesh/gen/proto/go/proto"
+
 	"github.com/hashicorp/go-multierror"
 	"golang.org/x/sync/semaphore"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/credentials/xds"
@@ -56,6 +58,10 @@ type EchoGrpcHandler struct {
 	Cluster      string
 	IstioVersion string
 	DialOptions  []grpc.DialOption
+}
+
+// Handle /grpc/ requests, equivalent with forward
+func (h *EchoGrpcHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 }
 
 func (h *EchoGrpcHandler) Register(grpcServer grpc.ServiceRegistrar) {

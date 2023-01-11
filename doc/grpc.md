@@ -90,11 +90,17 @@ XDS provides an alternative mechanism, where a (dynamic) config is used.
 
 ## grpcurl
 
+- requires discovery - would need an aggregated discovery service for ingress.
+- 
+
 ## ghz - load test
 
 ## grpcdebug
 
-kubectl port-forward -n echo-grpc echo-v1-c99d448f5-qj7px 17070:17070
+go install -v github.com/grpc-ecosystem/grpcdebug@latest
+
+kubectl -n echo-grpc port-forward $(kubectl -n echo-grpc get pods -l app=echo-grpc,version=v1 -ojsonpath='{.items[0].metadata.name}') 17070
+
 grpcdebug localhost:17070 xds status
 2022/03/30 11:36:28 failed to fetch xds config: rpc error: code = Unimplemented desc = unknown service envoy.service.status.v3.ClientStatusDiscoveryService
 
@@ -106,6 +112,10 @@ socket, subchannel
 
 - it seems recommended to use the admin service on separate port - should be secured.
 - 
+
+May have errors: proto: google.protobuf.Any: unable to resolve "type.googleapis.com/envoy.extensions.retry.host.previous_hosts.v3.PreviousHostsPredicate": not found
+(in RDS)
+
 
 # Implementation
 

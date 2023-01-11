@@ -76,7 +76,7 @@ func (s *tcpInstance) Start(onReady OnReadyFunc) error {
 		fmt.Printf("Listening TCP on %v\n", port)
 	}
 
-	// Start serving TCP traffic.
+	// RoundTripStart serving TCP traffic.
 	go func() {
 		for {
 			conn, err := listener.Accept()

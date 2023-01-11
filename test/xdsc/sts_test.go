@@ -25,8 +25,7 @@ import (
 	_ "github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/gcp"
 	"github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/k8s"
 	"github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/mesh"
-	crsts "github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/sts"
-	"github.com/costinm/grpc-mesh/sts"
+	"github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/sts"
 )
 
 // TestSTS uses a k8s connection and env to locate the mesh, and tests the token generation.
@@ -98,14 +97,18 @@ func TestP4SA(t *testing.T) {
 	}
 	kr.Cfg = kc
 	kr.TokenProvider = kc
-	kr.SkipSaveCerts = true
 
 	err = kr.LoadConfig(ctx)
 	if err != nil {
 		t.Skip("Failed to connect to GKE, missing kubeconfig ", time.Since(kr.StartTime), kr, os.Environ(), err)
 	}
 
-	sts, err := crsts.NewSTS(kr)
+	sts, err := sts.NewSTS(&sts.AuthConfig{
+		ProjectNumber:  kr.ProjectNumber,
+		TrustDomain:    kr.TrustDomain,
+		ClusterAddress: kr.ClusterAddress,
+		TokenSource:    kr,
+	})
 
 	masterT, err := kr.GetToken(ctx, kr.TrustDomain)
 	if err != nil {

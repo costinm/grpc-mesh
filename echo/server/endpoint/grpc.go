@@ -130,7 +130,7 @@ func (s *grpcInstance) Start(onReady OnReadyFunc) error {
 		}
 		s.cleanups = append(s.cleanups, cleanup)
 	}
-	// Start serving GRPC traffic.
+	// RoundTripStart serving GRPC traffic.
 	go func() {
 		err := s.server.Serve(listener)
 		epLog.Warnf("Port %d listener terminated with error: %v", p, err)

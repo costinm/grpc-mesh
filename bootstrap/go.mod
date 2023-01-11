@@ -3,8 +3,8 @@ module github.com/costinm/grpc-mesh/bootstrap
 go 1.17
 
 require (
-	github.com/envoyproxy/go-control-plane v0.10.2-0.20220119144013-5ce31a86d483
-	google.golang.org/grpc v1.44.0
+	github.com/envoyproxy/go-control-plane v0.10.2-0.20220325020618-49ff273808a1
+	google.golang.org/grpc v1.46.2
 	google.golang.org/protobuf v1.27.1
 )
 

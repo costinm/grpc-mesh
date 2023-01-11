@@ -66,7 +66,7 @@ var (
 )
 
 // UnaryClientInterceptor returns a grpc.UnaryClientInterceptor suitable
-// for use in a grpc.Dial call.
+// for use in a grpc.RoundTripStart call.
 func UnaryClientInterceptor(opts ...Option) grpc.UnaryClientInterceptor {
 	mp := global.MeterProvider()
 	gmeter := mp.Meter(instrumentationName)
@@ -74,12 +74,12 @@ func UnaryClientInterceptor(opts ...Option) grpc.UnaryClientInterceptor {
 	rc, _ := si64.Counter("grpc.client.request_count")
 
 	return func(
-			ctx context.Context,
-			method string,
-			req, reply interface{},
-			cc *grpc.ClientConn,
-			invoker grpc.UnaryInvoker,
-			callOpts ...grpc.CallOption,
+		ctx context.Context,
+		method string,
+		req, reply interface{},
+		cc *grpc.ClientConn,
+		invoker grpc.UnaryInvoker,
+		callOpts ...grpc.CallOption,
 	) error {
 		requestMetadata, _ := metadata.FromOutgoingContext(ctx)
 		metadataCopy := requestMetadata.Copy()
@@ -243,15 +243,15 @@ func (w *clientStream) sendStreamEvent(eventType streamEventType, err error) {
 }
 
 // StreamClientInterceptor returns a grpc.StreamClientInterceptor suitable
-// for use in a grpc.Dial call.
+// for use in a grpc.RoundTripStart call.
 func StreamClientInterceptor(opts ...Option) grpc.StreamClientInterceptor {
 	return func(
-			ctx context.Context,
-			desc *grpc.StreamDesc,
-			cc *grpc.ClientConn,
-			method string,
-			streamer grpc.Streamer,
-			callOpts ...grpc.CallOption,
+		ctx context.Context,
+		desc *grpc.StreamDesc,
+		cc *grpc.ClientConn,
+		method string,
+		streamer grpc.Streamer,
+		callOpts ...grpc.CallOption,
 	) (grpc.ClientStream, error) {
 		requestMetadata, _ := metadata.FromOutgoingContext(ctx)
 		metadataCopy := requestMetadata.Copy()
@@ -310,10 +310,10 @@ func UnaryServerInterceptor(opts ...Option) grpc.UnaryServerInterceptor {
 	rc, _ := si64.Counter("grpc.client.request_count")
 
 	return func(
-			ctx context.Context,
-			req interface{},
-			info *grpc.UnaryServerInfo,
-			handler grpc.UnaryHandler,
+		ctx context.Context,
+		req interface{},
+		info *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler,
 	) (interface{}, error) {
 		requestMetadata, _ := metadata.FromIncomingContext(ctx)
 		metadataCopy := requestMetadata.Copy()
@@ -399,10 +399,10 @@ func wrapServerStream(ctx context.Context, ss grpc.ServerStream) *serverStream {
 // for use in a grpc.NewServer call.
 func StreamServerInterceptor(opts ...Option) grpc.StreamServerInterceptor {
 	return func(
-			srv interface{},
-			ss grpc.ServerStream,
-			info *grpc.StreamServerInfo,
-			handler grpc.StreamHandler,
+		srv interface{},
+		ss grpc.ServerStream,
+		info *grpc.StreamServerInfo,
+		handler grpc.StreamHandler,
 	) error {
 		ctx := ss.Context()
 

@@ -12,13 +12,14 @@ replace github.com/costinm/grpc-mesh/gen/proto/go => ../gen/proto/go
 
 replace github.com/costinm/grpc-mesh => ../
 
-replace google.golang.org/grpc => ../../grpc
+//replace google.golang.org/grpc => ../../grpc
 
 replace github.com/GoogleCloudPlatform/cloud-run-mesh => ../../cloud-run-mesh
 
+replace github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/k8s => ../../cloud-run-mesh/pkg/k8s
+
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.0
-	github.com/GoogleCloudPlatform/cloud-run-mesh v0.0.0-20220128230121-cac57262761b
 	github.com/costinm/grpc-mesh/bootstrap v0.0.0-00010101000000-000000000000
 	github.com/costinm/grpc-mesh/gen/proto/go v0.0.0-00010101000000-000000000000
 	github.com/costinm/grpc-mesh/telemetry/logs/zap v0.0.0-00010101000000-000000000000
@@ -38,12 +39,16 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v0.28.0
 	go.uber.org/zap v1.21.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	google.golang.org/grpc v1.45.0
+	google.golang.org/grpc v1.46.2
 )
 
 require (
 	cloud.google.com/go/container v1.2.0 // indirect
 	cloud.google.com/go/security v1.3.0 // indirect
-	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
+	github.com/GoogleCloudPlatform/cloud-run-mesh v0.0.0-20220128230121-cac57262761b
+	github.com/go-logr/logr v1.2.3
+	github.com/go-logr/zapr v1.2.3
+	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
+	k8s.io/klog/v2 v2.60.1
 )

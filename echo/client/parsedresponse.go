@@ -23,9 +23,9 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 
-	"istio.io/istio/pkg/test"
 	"github.com/costinm/grpc-mesh/echo/common/response"
 	"github.com/costinm/grpc-mesh/echo/proto"
+	"istio.io/istio/pkg/test"
 	"istio.io/istio/pkg/util/istiomultierror"
 )
 
@@ -87,7 +87,7 @@ func (r *ParsedResponse) Count(text string) int {
 func (r *ParsedResponse) String() string {
 	out := ""
 	out += fmt.Sprintf("Body:         %s\n", r.Body)
-	out += fmt.Sprintf("ID:           %s\n", r.ID)
+	out += fmt.Sprintf("WorkloadID:           %s\n", r.ID)
 	out += fmt.Sprintf("URL:          %s\n", r.URL)
 	out += fmt.Sprintf("Version:      %s\n", r.Version)
 	out += fmt.Sprintf("Port:         %s\n", r.Port)

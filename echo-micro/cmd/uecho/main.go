@@ -20,12 +20,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	ocprom "contrib.go.opencensus.io/exporter/prometheus"
 	"github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/k8s"
 	"github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/mesh"
 	"github.com/costinm/grpc-mesh/bootstrap"
+	"github.com/costinm/grpc-mesh/echo-micro/server"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -35,8 +37,6 @@ import (
 	"go.opencensus.io/zpages"
 	"google.golang.org/grpc/binarylog"
 	pb "google.golang.org/grpc/binarylog/grpc_binarylog_v1"
-
-	"github.com/costinm/grpc-mesh/echo-micro/server"
 
 	//grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_zap "github.com/costinm/grpc-mesh/telemetry/logs/zap"
@@ -78,8 +78,10 @@ type GRPCServer interface {
 // TODO: tunnels
 func Run(lis net.Listener) (func(), error) {
 	// Configure zap as a logger for grpc.
-	zl, _ := zap.NewProduction(zap.AddCallerSkip(4))
-	grpc_zap.ReplaceGrpcLoggerV2WithVerbosity(zl, 99)
+	zl, _ := zap.NewDevelopment(zap.AddCallerSkip(4))
+	if strings.Contains(os.Getenv("DEBUG"), "xds") {
+		grpc_zap.ReplaceGrpcLoggerV2WithVerbosity(zl, -2)
+	}
 
 	alwaysLoggingDeciderServer := func(ctx context.Context, fullMethodName string, servingObject interface{}) bool { return true }
 	alwaysLoggingDeciderClient := func(ctx context.Context, fullMethodName string) bool { return true }
@@ -90,11 +92,7 @@ func Run(lis net.Listener) (func(), error) {
 		return nil, err
 	}
 
-	creds, _ := xdscreds.NewServerCredentials(xdscreds.ServerOptions{
-		FallbackCreds: insecure.NewCredentials()})
-
 	grpcOptions := []grpc.ServerOption{
-		grpc.Creds(creds),
 		grpc_middleware.WithStreamServerChain(
 			otelgrpc.StreamServerInterceptor(),
 			grpc_zap.StreamServerInterceptor(zl),
@@ -106,28 +104,47 @@ func Run(lis net.Listener) (func(), error) {
 	}
 
 	var grpcServer GRPCServer
-	if os.Getenv("GRPC_XDS_BOOTSTRAP") != "" {
-		// Only needs to be set to a file - if the file doesn't exist, create it.
-		// Get mesh config from the current cluster
-		kr := mesh.New()
+	bf := os.Getenv("GRPC_XDS_BOOTSTRAP")
+	if bf != "" {
+		creds, _ := xdscreds.NewServerCredentials(xdscreds.ServerOptions{
+			FallbackCreds: insecure.NewCredentials()})
+		grpcOptions = append(grpcOptions, grpc.Creds(creds))
 
-		// Using a K8s Client
-		kc := &k8s.K8S{Mesh: kr}
-		err := kc.K8SClient(ctx)
-		if err != nil {
-			return nil, err
+		if _, err := os.Stat(bf); os.IsNotExist(err) || true {
+			// Only needs to be set to a file - if the file doesn't exist, create it.
+			kr := mesh.New()
+
+			// Get mesh config from the current cluster
+			// Using a K8s Client
+			kc := &k8s.K8S{Mesh: kr}
+			err := kc.K8SClient(context.Background())
+			if err != nil {
+				return nil, err
+			}
+			kr.Cfg = kc
+			kr.TokenProvider = kc
+
+			// Load the config map with mesh-env
+			kr.LoadConfig(context.Background())
+
+			if kr.XDSAddr == "" {
+				kr.XDSAddr = kr.MeshConnectorAddr + ":15012"
+			}
+
+			err = bootstrap.GenerateBootstrapFile(&bootstrap.GenerateBootstrapOptions{
+				DiscoveryAddress: kr.XDSAddr,
+			}, bf)
+			if err != nil {
+				log.Fatal("Failed to write bootstrap file", err)
+			}
+			log.Info("Auto-generated bootstrap ", bf)
+		} else {
+			// Istio injected creds and bootstrap
+			log.Info("Using existing bootstrap ", bf)
 		}
-		kr.Cfg = kc
-		kr.TokenProvider = kc
-
-		// Load the config map with mesh-env
-		kr.LoadConfig(ctx)
-
-		bootstrap.GenerateBootstrap(nil)
-		// Replaces: grpc.NewServer(grpcOptions...)
 		grpcServer = xds.NewGRPCServer(grpcOptions...)
 	} else {
-		bootstrap.Init()
+		// Istio sidecar mode.
 		grpcServer = grpc.NewServer(grpcOptions...)
 	}
 
@@ -152,6 +169,8 @@ func Run(lis net.Listener) (func(), error) {
 
 	h.Register(grpcServer)
 
+	http.Handle("/grpc/", h)
+
 	// add the standard grpc health check
 	healthServer := health.NewServer()
 
@@ -168,7 +187,7 @@ func Run(lis net.Listener) (func(), error) {
 	}
 
 	// Status
-	go http.ListenAndServe("127.0.0.1:9081", http.DefaultServeMux)
+	go http.ListenAndServe(":9090", http.DefaultServeMux)
 
 	go func() {
 		err := grpcServer.Serve(lis)
@@ -204,25 +223,29 @@ func initTel(background context.Context, s string) (func(), error) {
 		log.Errorf("Failed to register ocgrpc server views: %v", err)
 	}
 
-	// Similar with pilot-agent
+	// Similar with pilot-agent - init prometheus registry, add a prefix
 	registry := prometheus.NewRegistry()
-	wrapped := prometheus.WrapRegistererWithPrefix("uecho_",
-		prometheus.Registerer(registry))
 
-	wrapped.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
-	wrapped.MustRegister(collectors.NewGoCollector())
+	//wrapped := prometheus.WrapRegistererWithPrefix("uecho_", prometheus.Registerer(registry))
 
-	//promRegistry = registry
+	registry.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
+	registry.MustRegister(collectors.NewGoCollector())
+
 	// go collector metrics collide with other metrics.
-	exporter, err := ocprom.NewExporter(ocprom.Options{Registry: registry,
-		Registerer: wrapped})
+	exporter, err := ocprom.NewExporter(ocprom.Options{
+		Registry: registry})
+	//Registerer: wrapped})
 	if err != nil {
 		log.Fatalf("could not setup exporter: %v", err)
 	}
+
 	view.RegisterExporter(exporter)
+
 	zpages.Handle(http.DefaultServeMux, "/debug")
 
 	http.Handle("/metrics", exporter)
+
+	// Collect runtime metrics
 	err = runmetrics.Enable(runmetrics.RunMetricOptions{
 		EnableCPU:    true,
 		EnableMemory: true,
@@ -241,7 +264,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "9080"
+		port = "17071"
 	}
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {

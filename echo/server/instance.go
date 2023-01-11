@@ -30,10 +30,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opencensus.io/stats/view"
 
-	"istio.io/istio/pilot/pkg/util/network"
-	"istio.io/istio/pkg/config/protocol"
 	"github.com/costinm/grpc-mesh/echo/common"
 	"github.com/costinm/grpc-mesh/echo/server/endpoint"
+	"istio.io/istio/pilot/pkg/util/network"
+	"istio.io/istio/pkg/config/protocol"
 	"istio.io/pkg/log"
 )
 
@@ -221,7 +221,7 @@ func (s *Instance) waitUntilReady() error {
 		wg.Done()
 	}
 
-	// Start the servers, updating port numbers as necessary.
+	// RoundTripStart the servers, updating port numbers as necessary.
 	for _, ep := range s.endpoints {
 		wg.Add(1)
 		if err := ep.Start(onEndpointReady); err != nil {

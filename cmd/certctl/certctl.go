@@ -2,42 +2,73 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
+	"flag"
 	"log"
+	"os"
+	"time"
 
-	// Import the GCS API definitions and generate using the template grpc/go.
-	// buf.build google doesn't include google.security.meshca.v1
-	//
-	storagev1 "go.buf.build/grpc/go/googleapis/googleapis/google/storage/v1"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
+	"github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/gcp"
+	"github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/mesh"
+	"github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/sts"
+	"github.com/costinm/grpc-mesh/cas"
 )
 
-// Command line tool to generate and refresh mesh certificates, matching GCP file paths.
+var (
+	ns       = flag.String("n", "default", "Namespace")
+	aud      = flag.String("audience", "", "Audience to use in the CSR request")
+	provider = flag.String("addr", "meshca", "Address. If empty will use the cluster default. meshca or cas can be used as shortcut")
+	outDir   = flag.String("out", "/var/run/secrets/workload-spiffe-credentials", "Output dir")
+)
+
+// CLI to get the mesh certificates, using CAS or MeshCA.
+// The resulting certificate is saved using workload certificate paths.
 //
-// On GKE, this is done automatically if the Pod is annotated with ...
-//
-// For go programs, it is recommended to directly call this from uca package.
-//
-// For other languages, until an native library is available, exec this program periodically.
-// Will create /var/run/secrets/....
-//
+// This should be run periodically to refresh the certs in environments where
+// CSI or other native integration is missing.
 func main() {
-	cc, err := grpc.Dial(
-		"storage.googleapis.com:443",
-		grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})),
-	)
-	if err != nil {
-		log.Fatalf("Failed to dial GCS API: %v", err)
+	flag.Parse()
+
+	kr := mesh.New()
+	if *ns != "" {
+		kr.Namespace = *ns
 	}
-	client := storagev1.NewStorageClient(cc)
-	resp, err := client.GetBucket(context.Background(), &storagev1.GetBucketRequest{
-		// Public GCS dataset
-		// Ref: https://cloud.google.com/healthcare/docs/resources/public-datasets/nih-chest
-		Bucket: "gcs-public-data--healthcare-nih-chest-xray",
-	})
+	ctx := context.Background()
+
+	// Use K8S to get tokens.
+	err := gcp.InitGCP(ctx, kr)
 	if err != nil {
-		log.Fatalf("Failed to get bucket: %v", err)
+		log.Fatal("Failed to find K8S ", time.Since(kr.StartTime), kr, os.Environ(), err)
 	}
-	log.Println(resp)
+
+	if false {
+		kr.TrustDomain = kr.ProjectId + ".svc.id.goog"
+		// Need project number, project_name from cluster
+		kr.ProjectNumber = "438684899409"
+		kr.ClusterAddress = "https://container.googleapis.com/v1/projects/" +
+			kr.ProjectId + "/locations/" + kr.ClusterLocation + "/clusters/" + kr.ClusterName
+	} else {
+		err = kr.LoadConfig(context.Background())
+		if err != nil {
+			log.Fatal("Failed to connect to mesh ", time.Since(kr.StartTime), kr, os.Environ(), err)
+		}
+	}
+
+	// Used to generate the CSR
+	auth := sts.NewAuth()
+	auth.TrustDomain = kr.TrustDomain
+	auth.Namespace = kr.Namespace
+
+	// TODO: fetch public keys too - possibly from all
+
+	cas.InitCA(auth, &sts.AuthConfig{
+		ProjectNumber:  kr.ProjectNumber,
+		TrustDomain:    kr.TrustDomain,
+		ClusterAddress: kr.ClusterAddress,
+		TokenSource:    kr.TokenProvider,
+	},
+		kr.Namespace,
+		kr.KSA,
+		*provider, "projects/"+kr.ProjectId+
+			"/locations/"+kr.Region()+"/caPools/mesh", kr.ClusterLocation,
+		kr.MeshConnectorAddr+":15012", kr.CitadelRoot)
 }

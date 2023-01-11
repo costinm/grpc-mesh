@@ -16,14 +16,13 @@ package bootstrap
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-
 	"google.golang.org/protobuf/types/known/structpb"
 
 	log "google.golang.org/grpc/grpclog"
@@ -31,6 +30,10 @@ import (
 
 // Extracted from istio/istio/pkg/istio-agent/grpcxds
 // - removed deps to istio internal packages
+
+// If a sidecar is present:
+// - "unix:///etc/istio/proxy/XDS" using agent
+// - istiod.istio-system.svc:15010 for plaintext
 
 const (
 	ServerListenerNamePrefix = "xds.istio.io/grpc/lds/inbound/"
@@ -161,6 +164,7 @@ type GenerateBootstrapOptions struct {
 const defaultXDSProxy = "/etc/istio/proxy/XDS"
 
 // GenerateBootstrap generates the bootstrap structure for gRPC XDS integration.
+// This is used for 'agentless' - but should also work if an agent is used (or some other provider handles the XDS proxy).
 func GenerateBootstrap(opts *GenerateBootstrapOptions) (*Bootstrap, error) {
 	if opts == nil {
 		opts = &GenerateBootstrapOptions{}
@@ -175,19 +179,9 @@ func GenerateBootstrap(opts *GenerateBootstrapOptions) (*Bootstrap, error) {
 		return nil, fmt.Errorf("failed extracting xds metadata: %v", err)
 	}
 
-	// TODO direct to CP should use secure channel (most likely JWT + TLS, but possibly allow mTLS)
-	serverURI := opts.DiscoveryAddress
-	if opts.XdsUdsPath != "" {
-		serverURI = fmt.Sprintf("unix:///%s", opts.XdsUdsPath)
-	} else if _, err := os.Stat(defaultXDSProxy); !os.IsNotExist(err) {
-		serverURI = "unix://" + defaultXDSProxy
-	}
-
-	bootstrap := Bootstrap{
+	bootstrap := &Bootstrap{
 		XDSServers: []XdsServer{{
-			ServerURI: serverURI,
 			// connect locally via agent
-			ChannelCreds:   []ChannelCreds{{Type: "insecure"}},
 			ServerFeatures: []string{"xds_v3"},
 		}},
 		Node: &core.Node{
@@ -198,6 +192,40 @@ func GenerateBootstrap(opts *GenerateBootstrapOptions) (*Bootstrap, error) {
 		ServerListenerNameTemplate: ServerListenerNameTemplate,
 	}
 
+	// TODO direct to CP should use secure channel (most likely JWT + TLS, but possibly allow mTLS)
+	serverURI := opts.DiscoveryAddress
+	if serverURI == "" {
+		if opts.XdsUdsPath != "" {
+			serverURI = fmt.Sprintf("unix:///%s", opts.XdsUdsPath)
+			bootstrap.XDSServers[0].ChannelCreds = []ChannelCreds{{Type: "insecure"}}
+		} else if _, err := os.Stat(defaultXDSProxy); !os.IsNotExist(err) {
+			serverURI = "unix://" + defaultXDSProxy
+			bootstrap.XDSServers[0].ChannelCreds = []ChannelCreds{{Type: "insecure"}}
+		}
+	} else {
+		// TODO: add support to Istiod to support JWTs from google
+		if strings.Contains(serverURI, ":15010") {
+			bootstrap.XDSServers[0].ChannelCreds = []ChannelCreds{{Type: "insecure"}}
+		} else {
+			bootstrap.XDSServers[0].ChannelCreds = []ChannelCreds{{Type: "mtls"}}
+		}
+	}
+	bootstrap.XDSServers[0].ServerURI = serverURI
+
+	InitCerts(bootstrap, opts)
+	return bootstrap, err
+}
+
+func InitCerts(bootstrap *Bootstrap, opts *GenerateBootstrapOptions) {
+	if false {
+		// If this code is called, we have registered the custom xds auth and provider.
+		bootstrap.CertProviders = map[string]CertificateProvider{
+			"default": {
+				PluginName: "certs", // Same as Name()
+			},
+		}
+		return
+	}
 	if opts.CertDir != "" {
 		bootstrap.CertProviders = map[string]CertificateProvider{
 			"default": {
@@ -210,24 +238,26 @@ func GenerateBootstrap(opts *GenerateBootstrapOptions) (*Bootstrap, error) {
 				},
 			},
 		}
-	} else {
-		base := "./var/run/secrets/workload-spiffe-credentials/"
-		if _, err := os.Stat(base + "ca_certificates.pem"); !os.IsNotExist(err) {
-			bootstrap.CertProviders = map[string]CertificateProvider{
-				"default": {
-					PluginName: "file_watcher",
-					Config: FileWatcherCertProviderConfig{
-						PrivateKeyFile:    path.Join(opts.CertDir, "private_key.pem"),
-						CertificateFile:   path.Join(base, "certificates.pem"),
-						CACertificateFile: path.Join(base, "ca_certificates.pem"),
-						RefreshDuration:   "600s",
-					},
+		return
+	}
+	base := "/var/run/secrets/workload-spiffe-credentials/"
+	if _, err := os.Stat(base + "ca_certificates.pem"); !os.IsNotExist(err) {
+		bootstrap.CertProviders = map[string]CertificateProvider{
+			"default": {
+				PluginName: "file_watcher",
+				Config: FileWatcherCertProviderConfig{
+					PrivateKeyFile:    path.Join(base, "private_key.pem"),
+					CertificateFile:   path.Join(base, "certificates.pem"),
+					CACertificateFile: path.Join(base, "ca_certificates.pem"),
+					RefreshDuration:   "600s",
 				},
-			}
+			},
 		}
+		return
 	}
 
-	return &bootstrap, err
+	// Didn't find platform files, attempt in-memory
+
 }
 
 func extractMeta(rawMeta map[string]interface{}) (*structpb.Struct, error) {
@@ -248,37 +278,21 @@ func GenerateBootstrapFile(opts *GenerateBootstrapOptions, path string) error {
 	if err != nil {
 		return err
 	}
-	//if err := file.AtomicWrite(path, jsonData, os.FileMode(0o644)); err != nil {
-	//	return nil, fmt.Errorf("failed writing to %s: %v", path, err)
-	//}
 	if err := ioutil.WriteFile(path, jsonData, os.FileMode(0o644)); err != nil {
 		return fmt.Errorf("failed writing to %s: %v", path, err)
 	}
 	return nil
 }
 
-func Generate(opts *GenerateBootstrapOptions) error {
-	bootF := os.Getenv("GRPC_XDS_BOOTSTRAP")
-	if bootF == "" {
-		return errors.New("missing GRPC_XDS_BOOTSTRAP")
-	}
-
-	if _, err := os.Stat(bootF); os.IsNotExist(err) {
-		// TODO: write the bootstrap file.
-		GenerateBootstrapFile(opts, bootF)
-	}
-	return nil
-}
-
-// Init will handle GRPC bootstrap initialization. This will load or create a bootstrap file,
-// and perform the XDS specific initialization.
-func Init() {
-	if os.Getenv("GRPC_XDS_BOOTSTRAP") != "" {
-		// User specified the env variable: if the file exists, load it, otherwise generate it.
-
-		return
-	}
-
-	// No bootstrap env - will use the internal Test methods to hook up.
-
-}
+//func Generate(opts *GenerateBootstrapOptions) error {
+//	bootF := os.Getenv("GRPC_XDS_BOOTSTRAP")
+//	if bootF == "" {
+//		return errors.New("missing GRPC_XDS_BOOTSTRAP")
+//	}
+//
+//	if _, err := os.Stat(bootF); os.IsNotExist(err) {
+//		// TODO: write the bootstrap file.
+//		GenerateBootstrapFile(opts, bootF)
+//	}
+//	return nil
+//}

@@ -142,14 +142,14 @@ func initOTel(ctx context.Context, serviceName string) (func(), error) {
 	}
 	http.HandleFunc("/metrics", exporterp.ServeHTTP)
 
-	//if err = metricsController.Start(ctx); err != nil {
+	//if err = metricsController.RoundTripStart(ctx); err != nil {
 	//	log.Fatalf("starting push controller: %v", err)
 	//}
 
 	global.SetMeterProvider(metricsController)
 
 	// Global instrumentations
-	//if err := runtime.Start(
+	//if err := runtime.RoundTripStart(
 	//	runtime.WithMinimumReadMemStatsInterval(time.Second),
 	//); err != nil {
 	//	log.Fatalln("failed to start runtime instrumentation:", err)

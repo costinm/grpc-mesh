@@ -2,6 +2,7 @@ ROOT_DIR?=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 OUT?=${ROOT_DIR}/../out/grpc-mesh
 
 GOSTATIC=CGO_ENABLED=0  GOOS=linux GOARCH=amd64 time  go build -ldflags '-s -w -extldflags "-static"' -o ${OUT}
+export PATH:=$(PATH):${HOME}/go/bin
 
 build:
 	mkdir -p ${OUT}
@@ -25,24 +26,26 @@ push/uproxy:
 	(cd echo-micro && ${GOSTATIC} ./cmd/uecho)
 	$(MAKE) _push BIN=uecho
 
-gen-old:
-	protoc --go_out xds --go_opt=paths=source_relative -I xds xds/*.proto
-	protoc \
-		-I proto \
-		-I vendor/protoc-gen-validate \
-		$(find proto -name '*.proto')
+#gen-old:
+#	protoc --go_out xds --go_opt=paths=source_relative -I xds xds/*.proto
+#	protoc \
+#		-I proto \
+#		-I vendor/protoc-gen-validate \
+#		$(find proto -name '*.proto')
 
 proto-gen:
 	cd proto && buf generate
 
 deps:
+	go install github.com/bufbuild/buf/cmd/buf@latest
+	go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install github.com/bufbuild/connect-go/cmd/protoc-gen-connect-go@latest
+
+	# debug tool for std grpc - need http/tcp equivalent
 	go install -v github.com/grpc-ecosystem/grpcdebug@latest
 	# Test tool
-	go install github.com/bojand/ghz@latest
-
-	go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
-	# Used to build the protos, lint
-	GO111MODULE=on go install  github.com/bufbuild/buf/cmd/buf@v1.1.0
+	go install github.com/bojand/ghz/cmd/ghz@latest
 
 #docker run --volume "$(pwd):/workspace" --workdir /workspace bufbuild/buf lint
 
@@ -75,10 +78,13 @@ status:
 	kubectl -n istio-system get gateways.gateway.networking.k8s.io istio-ingressgateway  -o yaml
 	kubectl -n echo-grpc get httproute.gateway.networking.k8s.io   -o yaml
 
+
+
 ls/all:
 
 
 td-setup: NEG_NAME=k8s1-5e434f9a-istio-system-hgate-istiod-15012-876c9370
+td-setup:
 	# backend created automatically via ServiceExport  or cloud.google.com/neg: '{"exposed_ports":{"8080":{}}}' annotation
 	gcloud compute network-endpoint-groups list
 	# kubectl -n fortio-asm get serviceimports.net.gke.io

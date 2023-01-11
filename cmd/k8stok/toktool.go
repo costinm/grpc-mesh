@@ -28,16 +28,23 @@ func main() {
 	mesh.Debug = false
 
 	kr := mesh.New()
-	kr.SkipSaveCerts = true
+	// Override env variables with CLI
 	kr.Namespace = *namespace
+
 	err := gcp.InitGCP(ctx, kr)
 
+	// Load missing parameters from cluster
 	err = kr.LoadConfig(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	tokenProvider, err := sts.NewSTS(kr)
+	tokenProvider, err := sts.NewSTS(&sts.AuthConfig{
+		ProjectNumber:  kr.ProjectNumber,
+		TrustDomain:    kr.TrustDomain,
+		ClusterAddress: kr.ClusterAddress,
+		TokenSource:    kr.TokenProvider,
+	})
 
 	if *gcpSA == "" && !*fed {
 		tokenProvider.K8S = true
