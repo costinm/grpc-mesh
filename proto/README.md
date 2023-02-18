@@ -1,27 +1,25 @@
-# Protos defined and used in the repo
+# Proto buffers used in this repo
 
-Adopting the style of 'buf.build', and keeping the protos dependency-free (except the proto itself)
+Proto buffers are commonly used - XDS, certs, OTel, OpenMetrics, etc.
+Unfortunately the client libraries tend to be huge and bring many
+dependencies. 
 
+To avoid large dependencies and keep size small, a different approach 
+is used for protos in this repo: it includes only a subset, extracted
+from the original and sometimes trimmed down. 
 
-## BSR
+For example, for XDS only the core proto and the object used are included - 
+envoy has a huge collection of protos, matching its internal implementation.
+Similarly for the other integrations cleaned up and minimized protos are added.
 
-auto-generated code:
-  go.buf.build/TEMPLATE_OWNER/TEMPLATE_NAME/MODULE_OWNER/MODULE_NAME
+# XDS and Istio subset
 
-Example: 
-"go.buf.build/grpc/go/googleapis/googleapis/google/storage/v1"
+Envoy and Istio protos are very large and have many dependencies. This is a subset - a bit
+larger than what is used, but with no external deps.
 
-## Usage
+In particular 'Any', 'Struct' are redefined and used as raw protocols - no deep unmarshalling.
+
+## Buf
 
 grpcurl -protoset <(buf build -o -) ...
 
-
-## Imported packages
-
-- proto - Istio test echo is using the 'proto' package - preserved for compatibility with the test infra. 
-- private ca
-- meshca
-- istio ca
-- grpc/grpc-proto - except tls/provider/meshca
-- simplified version of envoy
-- konectivity from kde

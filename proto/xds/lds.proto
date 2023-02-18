@@ -179,46 +179,6 @@ message FilterChainMatch {
     UInt32Value destination_port = 8;
 }
 
-message Filter {
-    // The name of the filter to instantiate. The name must match a supported
-    // filter. The built-in filters are:
-    //
-    // [#comment:TODO(mattklein123): Auto generate the following list]
-    // * :ref:`envoy.client_ssl_auth<config_network_filters_client_ssl_auth>`
-    // * :ref:`envoy.echo <config_network_filters_echo>`
-    // * :ref:`envoy.http_connection_manager <config_http_conn_man>`
-    // * :ref:`envoy.mongo_proxy <config_network_filters_mongo_proxy>`
-    // * :ref:`envoy.ratelimit <config_network_filters_rate_limit>`
-    // * :ref:`envoy.redis_proxy <config_network_filters_redis_proxy>`
-    // * :ref:`envoy.tcp_proxy <config_network_filters_tcp_proxy>`
-    string name = 1;
-
-    // Filter specific configuration which depends on the filter being
-    // instantiated. See the supported filters for further documentation.
-    Struct config = 2;
-
-    // [#not-implemented-hide:]
-    message DeprecatedV1 {
-        string type = 1;
-    }
-
-    // [#not-implemented-hide:]
-    DeprecatedV1 deprecated_v1 = 3 [deprecated = true];
-}
-
-// Configuration for transport socket in :ref:`listeners <config_listeners>` and
-// :ref:`clusters <config_cluster_manager_cluster>`. If the configuration is
-// empty, a default transport socket implementation and configuration will be
-// chosen based on the platform and existence of tls_context.
-message TransportSocket {
-    // The name of the transport socket to instantiate. The name must match a supported transport
-    // socket implementation.
-    string name = 1;
-
-    // Implementation specific configuration which depends on the implementation being instantiated.
-    // See the supported transport socket implementations for further documentation.
-    Struct config = 2;
-}
 
 message DownstreamTlsContext {
     // Common TLS context settings.
