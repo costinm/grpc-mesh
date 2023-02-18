@@ -21,7 +21,6 @@ import (
 	"syscall"
 
 	"github.com/costinm/grpc-mesh/echo-micro/server"
-	"github.com/costinm/grpc-mesh/gen/proto/go/proto"
 	"google.golang.org/grpc/admin"
 	xdscreds "google.golang.org/grpc/credentials/xds"
 	"google.golang.org/grpc/xds"
@@ -51,7 +50,7 @@ func Run(lis net.Listener) error {
 	admin.Register(grpcServer)
 
 	h := &server.EchoGrpcHandler{}
-	proto.RegisterEchoTestServiceServer(grpcServer, h)
+	h.Register(grpcServer)
 
 	return grpcServer.Serve(lis)
 }

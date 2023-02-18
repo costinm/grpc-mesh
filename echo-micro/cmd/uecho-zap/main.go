@@ -23,7 +23,6 @@ import (
 	"syscall"
 
 	"github.com/costinm/grpc-mesh/echo-micro/server"
-	"github.com/costinm/grpc-mesh/gen/proto/go/proto"
 	//grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_zap "github.com/costinm/grpc-mesh/telemetry/logs/zap"
 	"go.uber.org/zap"
@@ -63,7 +62,7 @@ func Run(port string) error {
 	}
 
 	grpcServer := grpc.NewServer(grpcOptions...)
-	proto.RegisterEchoTestServiceServer(grpcServer, h)
+	h.Register(grpcServer)
 
 	go func() {
 		err = grpcServer.Serve(lis)

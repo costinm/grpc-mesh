@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/costinm/grpc-mesh/gen/proto/go/proto"
+	"github.com/costinm/grpc-mesh/gen/grpc-go/proto"
 
 	"github.com/hashicorp/go-multierror"
 	"golang.org/x/sync/semaphore"
@@ -243,7 +243,7 @@ const (
 	HostnameField       Field = "Hostname"
 	MethodField         Field = "Method"
 	ResponseHeader      Field = "ResponseHeader"
-	ClusterField        Field = "Cluster"
+	ClusterField        Field = "Dest"
 	IstioVersionField   Field = "IstioVersion"
 	IPField             Field = "IP" // The Requester’s IP Address.
 )

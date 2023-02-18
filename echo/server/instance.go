@@ -63,7 +63,7 @@ func (c Config) String() string {
 	b.WriteString(fmt.Sprintf("TLSKey:                %v\n", c.TLSKey))
 	b.WriteString(fmt.Sprintf("Version:               %v\n", c.Version))
 	b.WriteString(fmt.Sprintf("UDSServer:             %v\n", c.UDSServer))
-	b.WriteString(fmt.Sprintf("Cluster:               %v\n", c.Cluster))
+	b.WriteString(fmt.Sprintf("Dest:               %v\n", c.Cluster))
 	b.WriteString(fmt.Sprintf("IstioVersion:          %v\n", c.IstioVersion))
 
 	return b.String()

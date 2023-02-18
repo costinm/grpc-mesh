@@ -94,7 +94,7 @@ func (r *ParsedResponse) String() string {
 	out += fmt.Sprintf("Code:         %s\n", r.Code)
 	out += fmt.Sprintf("Host:         %s\n", r.Host)
 	out += fmt.Sprintf("Hostname:     %s\n", r.Hostname)
-	out += fmt.Sprintf("Cluster:      %s\n", r.Cluster)
+	out += fmt.Sprintf("Dest:      %s\n", r.Cluster)
 	out += fmt.Sprintf("IstioVersion: %s\n", r.IstioVersion)
 	out += fmt.Sprintf("IP:           %s\n", r.IP)
 
@@ -283,7 +283,7 @@ func (r ParsedResponses) CheckKey(key, expected string) error {
 func (r ParsedResponses) CheckCluster(expected string) error {
 	return r.Check(func(i int, response *ParsedResponse) error {
 		if response.Cluster != expected {
-			return fmt.Errorf("response[%d] Cluster: expected %s, received %s", i, expected, response.Cluster)
+			return fmt.Errorf("response[%d] Dest: expected %s, received %s", i, expected, response.Cluster)
 		}
 		return nil
 	})

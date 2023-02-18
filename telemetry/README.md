@@ -1,3 +1,26 @@
+# Google
+
+OTel collector to Stackdriver:
+
+https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/tree/main/exporter/collector
+
+Native OTel tracing: 
+
+OpenMetrics/GMP
+
+# Envoy
+```yaml
+access_log:
+        - name: envoy.access_loggers.open_telemetry
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.access_loggers.open_telemetry.v3.OpenTelemetryAccessLogConfig
+            common_config:
+                 log_name: name
+                 grpc_service:
+                      envoy_grpc:
+                          cluster_name: grpc_cluster
+```
+
 # Telemetry helpers and plugins 
 
 Helpers to configure otel tracing and monitoring for gRPC

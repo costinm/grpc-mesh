@@ -8,10 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/k8s"
-	"github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/mesh"
-	"github.com/GoogleCloudPlatform/cloud-run-mesh/pkg/sts"
-	"github.com/costinm/grpc-mesh/xdsc"
+	"github.com/costinm/grpc-mesh/bootstrap"
+	"github.com/costinm/meshauth"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -20,22 +19,18 @@ import (
 )
 
 // Get mesh config from the current cluster
-func LoadConfig(ctx context.Context) (*mesh.KRun, error) {
-	kr := mesh.New()
-
-	// Using a K8s Client
-	kc := &k8s.K8S{Mesh: kr}
-	err := kc.K8SClient(ctx)
+func LoadConfig(ctx context.Context) (*meshauth.K8SCluster, error) {
+	kconf, err := bootstrap.LoadKubeconfig()
 	if err != nil {
 		return nil, err
 	}
-	kr.Cfg = kc
-	kr.TokenProvider = kc
 
-	// Load the config map with mesh-env
-	kr.LoadConfig(ctx)
+	def, _, err := meshauth.InitK8S(ctx, kconf)
+	if err != nil {
+		return nil, err
+	}
 
-	return kr, err
+	return def, err
 }
 
 func TestMCP(t *testing.T) {
@@ -45,15 +40,18 @@ func TestMCP(t *testing.T) {
 
 	kr, err := LoadConfig(ctx)
 
+	ma := meshauth.NewMeshAuth(nil)
+
 	// The mesh configuration should have all the properties we need -
 	// see the code for example content.
 
 	m := map[string]interface{}{}
 	m["CLUSTER_ID"] = kr.ClusterName
 	m["NAMESPACE"] = kr.Namespace
-	m["SERVICE_ACCOUNT"] = kr.KSA
+	m["SERVICE_ACCOUNT"] = kr.ServiceAccount
+	m["x-goog-user-project"] = kr.ProjectID
 	// Required for connecting to MCP.
-	m["CLOUDRUN_ADDR"] = "asm-big1-asm-managed-us-central1-c-42okyzkgcq-uc.a.run.app:443"
+	//m["CLOUDRUN_ADDR"] = "asm-big1-asm-managed-us-central1-c-42okyzkgcq-uc.a.run.app:443"
 	// kr.MeshTenant
 
 	//m["LABELS"] = x.Labels
@@ -61,9 +59,16 @@ func TestMCP(t *testing.T) {
 	m["ISTIO_VERSION"] = "1.20.0-xdsc"
 	m["SDS"] = "true"
 
-	xdsConfig := &xdsc.Config{
+	sts1, err := kr.GCPFederatedSource(ctx)
+	ts := meshauth.NewGCPTokenSource(&meshauth.GCPAuthConfig{
+		TokenSource:   sts1,
+		ProjectNumber: kr.GetEnv(meshauth.MeshProjectNumber, ""),
+		TrustDomain:   kr.ProjectID + ".svc.id.goog",
+	})
+
+	xdsConfig := &Config{
 		Namespace: kr.Namespace,
-		Workload:  kr.Name + "-" + "10.10.1.1",
+		Workload:  ma.MDS.WorkloadName() + "-" + "10.10.1.1",
 		Meta:      m,
 		NodeType:  "sidecar",
 		IP:        "10.10.1.1",
@@ -71,19 +76,24 @@ func TestMCP(t *testing.T) {
 
 		GrpcOpts: []grpc.DialOption{
 			// Using the STS library to exchange tokens
-			grpc.WithPerRPCCredentials(sts.NewGSATokenSource(kr, "")),
+			grpc.WithPerRPCCredentials(ts),
 			grpc.WithTransportCredentials(credentials.NewTLS(
 				&tls.Config{
 					InsecureSkipVerify: false,
 				})),
 		},
 	}
+	ktok, err := kr.GetToken(ctx, kr.ProjectID+" .svc.id.goog")
+	xdsConfig.XDSHeaders = map[string]string{
+		"x-goog-user-project":  kr.ProjectID, // kr.GetEnv(meshauth.MeshProjectNumber, ""), //
+		"x-mesh-authorization": ktok,
+	}
 
 	//ctx = metadata.AppendToOutgoingContext(context.Background(), "ClusterID", p.clusterID)
-	xdsAddr := kr.XDSAddr
-	xdsAddr = "staging-meshconfig.sandbox.googleapis.com:443"
-	// "meshconfig.googleapis.com:443"
-	xdscc, err := xdsc.DialContext(ctx, xdsAddr, xdsConfig)
+	//xdsAddr := kr.XDSAddr
+	xdsAddr := //"staging-meshconfig.sandbox.googleapis.com:443"
+		"meshconfig.googleapis.com:443"
+	xdscc, err := DialContext(ctx, xdsAddr, xdsConfig)
 	// calls Run()
 	if err != nil {
 		t.Fatal(err)
@@ -102,13 +112,15 @@ func TestIstiod(t *testing.T) {
 
 	kr, err := LoadConfig(ctx)
 
+	ma := meshauth.NewMeshAuth(nil)
+
 	// The mesh configuration should have all the properties we need -
 	// see the code for example content.
 
 	m := map[string]interface{}{}
 	m["CLUSTER_ID"] = kr.ClusterName
 	m["NAMESPACE"] = kr.Namespace
-	m["SERVICE_ACCOUNT"] = kr.KSA
+	m["SERVICE_ACCOUNT"] = kr.ServiceAccount
 	// kr.MeshTenant
 
 	//m["LABELS"] = x.Labels
@@ -116,9 +128,9 @@ func TestIstiod(t *testing.T) {
 	m["ISTIO_VERSION"] = "1.20.0-xdsc"
 	m["SDS"] = "true"
 
-	xdsConfig := &xdsc.Config{
+	xdsConfig := &Config{
 		Namespace: kr.Namespace,
-		Workload:  kr.Name + "-" + "10.10.1.1",
+		Workload:  ma.MDS.WorkloadName() + "-" + "10.10.1.1",
 		Meta:      m,
 		NodeType:  "sidecar",
 		IP:        "10.10.1.1",
@@ -126,8 +138,7 @@ func TestIstiod(t *testing.T) {
 
 		GrpcOpts: []grpc.DialOption{
 			// Using the STS library to exchange tokens
-			grpc.WithPerRPCCredentials(
-				sts.NewK8STokenSource(kr, kr.TrustDomain)),
+			grpc.WithPerRPCCredentials(kr),
 			grpc.WithTransportCredentials(credentials.NewTLS(
 				&tls.Config{
 					// TODO: specify the cert from kr
@@ -137,15 +148,15 @@ func TestIstiod(t *testing.T) {
 	}
 
 	//ctx = metadata.AppendToOutgoingContext(context.Background(), "ClusterID", p.clusterID)
-	xdsAddr := kr.XDSAddr
+	xdsAddr := kr.GetEnv("MCON_ADDR", "") + ":15012"
 	if xdsAddr == "" {
 		// This is the external address, only enabled for multi-network.
 		// If running from an internal address, use
 		// kr.MeshConnectorInternalAddr
-		xdsAddr = kr.MeshConnectorAddr + ":15012"
+		xdsAddr = "127.0.0.1:15012"
 	}
 
-	xdscc, err := xdsc.DialContext(ctx, xdsAddr, xdsConfig)
+	xdscc, err := DialContext(ctx, xdsAddr, xdsConfig)
 	// calls Run()
 	if err != nil {
 		t.Fatal(err)
@@ -166,25 +177,36 @@ func TestTD(t *testing.T) {
 
 	m := map[string]interface{}{}
 	m["TRAFFICDIRECTOR_NETWORK_NAME"] = "default"
-	m["TRAFFICDIRECTOR_GCP_PROJECT_NUMBER"] = kr.ProjectNumber
+	m["TRAFFICDIRECTOR_GCP_PROJECT_NUMBER"] = kr.GetEnv(meshauth.MeshProjectNumber, "")
 	m["INSTANCE_IP"] = "10.48.0.63"
 
-	xdsConfig := &xdsc.Config{
+	sts1, err := kr.GCPFederatedSource(ctx)
+	ts := meshauth.NewGCPTokenSource(&meshauth.GCPAuthConfig{
+		TokenSource:   sts1,
+		ProjectNumber: kr.GetEnv(meshauth.MeshProjectNumber, ""),
+		TrustDomain:   kr.ProjectID + ".svc.id.goog",
+	})
+	//meshauth.NewGSATokenSource(&meshauth.STSAuthConfig{
+	//	TokenSource: kr,
+	//}, "k8s-fortio@costin-asm1.iam.gserviceaccount.com")),
+
+	ma := meshauth.NewMeshAuth(nil)
+
+	xdsConfig := &Config{
 		Namespace: kr.Namespace,
-		Workload:  kr.Name + "-" + "10.10.1.1",
+		Workload:  ma.MDS.WorkloadName() + "-" + "10.10.1.1",
 		Meta:      m,
 
 		NodeType: "sidecar",
 		IP:       "10.10.1.1",
 		Context:  ctx,
-		Locality: kr.ClusterLocation,
+		Locality: kr.Location,
 		NodeId: fmt.Sprintf("projects/%s/networks/default/nodes/1234",
-			kr.ProjectNumber),
+			kr.GetEnv(meshauth.MeshProjectNumber, "")),
 
 		GrpcOpts: []grpc.DialOption{
 			// Using the STS library to exchange tokens
-			grpc.WithPerRPCCredentials(
-				sts.NewGSATokenSource(kr, "k8s-fortio@costin-asm1.iam.gserviceaccount.com")),
+			grpc.WithPerRPCCredentials(ts),
 			grpc.WithTransportCredentials(credentials.NewTLS(
 				&tls.Config{
 					// TODO: specify the cert from kr
@@ -193,7 +215,7 @@ func TestTD(t *testing.T) {
 		},
 	}
 
-	xdscc, err := xdsc.DialContext(ctx, "trafficdirector.googleapis.com:443", xdsConfig)
+	xdscc, err := DialContext(ctx, "trafficdirector.googleapis.com:443", xdsConfig)
 	// calls Run()
 	if err != nil {
 		t.Fatal(err)
