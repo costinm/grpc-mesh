@@ -1,30 +1,3 @@
-ROOT_DIR?=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-OUT?=${ROOT_DIR}/../out/grpc-mesh
-
-GOSTATIC=CGO_ENABLED=0  GOOS=linux GOARCH=amd64 time  go build -ldflags '-s -w -extldflags "-static"' -o ${OUT}
-export PATH:=$(PATH):${HOME}/go/bin
-
-build:
-	mkdir -p ${OUT}
-	(cd echo && ${GOSTATIC} ./cmd/server ./cmd/client)
-	(cd echo-micro && ${GOSTATIC} ./cmd/*)
-	ls -l ${OUT}
-
-DOCKER_REPO?=gcr.io/dmeshgate/grpcmesh
-BASE_DISTROLESS?=gcr.io/distroless/static
-
-
-_push:
-		(export IMG=$(shell cd ${OUT} && tar -cf - ${PUSH_FILES} ${BIN} | \
-    					  gcrane append -f - -b ${BASE_DISTROLESS} \
-    						-t ${DOCKER_REPO}/${BIN}:latest \
-    					   ) && \
-    	gcrane mutate $${IMG} -t ${DOCKER_REPO}/${BIN}:latest --entrypoint /${BIN} \
-    	)
-
-push/uproxy:
-	(cd echo-micro && ${GOSTATIC} ./cmd/uecho)
-	$(MAKE) _push BIN=uecho
 
 #gen-old:
 #	protoc --go_out xds --go_opt=paths=source_relative -I xds xds/*.proto
@@ -33,8 +6,16 @@ push/uproxy:
 #		-I vendor/protoc-gen-validate \
 #		$(find proto -name '*.proto')
 
+proto-gen: PATH:=${HOME}/go/bin:${PATH}
 proto-gen:
-	cd proto && buf generate
+	rm -rf gen/proto/go
+	rm -rf gen/connect/go
+	rm -rf gen/grpc/go
+	(cd proto && buf generate)
+	(cd gen/proto && go mod tidy)
+	(cd gen/connect && go mod tidy)
+	(cd gen/grpc && go mod tidy)
+
 
 deps:
 	go install github.com/bufbuild/buf/cmd/buf@latest
@@ -49,15 +30,6 @@ deps:
 
 #docker run --volume "$(pwd):/workspace" --workdir /workspace bufbuild/buf lint
 
-echo/istio:
-	(cd echo; go install ./cmd/server)
-	server
-
-install-cni:
-	helm repo add istio https://istio-release.storage.googleapis.com/charts
-	helm repo update
-	helm template istio-cni istio/cni -n kube-system --set cni.cniBinDir=/home/kubernetes/bin \
-		--set cni.hub=gcr.io/gke-release/asm --set cni.tag=1.12.4-asm.2 |kubectl apply -f -
 
 # Enable the K8S Gateway in the cluster
 k8s-gw:
@@ -77,11 +49,6 @@ echo/call:
 status:
 	kubectl -n istio-system get gateways.gateway.networking.k8s.io istio-ingressgateway  -o yaml
 	kubectl -n echo-grpc get httproute.gateway.networking.k8s.io   -o yaml
-
-
-
-ls/all:
-
 
 td-setup: NEG_NAME=k8s1-5e434f9a-istio-system-hgate-istiod-15012-876c9370
 td-setup:
