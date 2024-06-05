@@ -34,6 +34,19 @@ message IstioCertificateRequest {
   // Optional: requested certificate validity period, in seconds.
   int64 validity_duration = 3;
 
+  // Explicit list of SANs. Allowed if the caller has permissions, for example
+  // ztunnel JWT can get certificates for all pods on the same node.
+  repeated string sans = 5;
+
+  // signerName indicates the requested signer, and is a qualified name
+  // Using this enables the use of the K8S signing API and is passed to K8S.
+  string signer_name = 6;
+
+  // cluster_id is the name of the cluster. If not set, the default K8S cluster is used.
+  // This is used to verify the JWT token using TokenReview. The service must be configured
+  // with the cluster information.
+  string cluster_id = 7;
+
   // $hide_from_docs
   // Optional: Opaque metadata provided by the XDS node to Istio.
   // Supported metadata: WorkloadName, WorkloadIP, ClusterID
@@ -43,8 +56,27 @@ message IstioCertificateRequest {
 // Certificate response message.
 message IstioCertificateResponse {
   // PEM-encoded certificate chain.
-  // The leaf cert is the first element, and the root cert is the last element.
+  // The leaf cert is the first element, and the root cert is the last element,
+  // and the list must have at least those 2 elements.
+  //
+  // Each element in the response except the last may also be a concatenated list
+  // of certificates. Istio TLS will include all the certificates in the response,
+  // including the root.
+  //
+  // For Istio auto-generated certificates the list has only 2 elements, the certificate
+  // and the self-signed root.
+  //
+  // See https://www.rfc-editor.org/rfc/rfc5246#page-48 for TLS info.
   repeated string cert_chain = 1;
+
+  // Extensions:
+  // - explicit PEM with the mesh trusted roots (duplicates last element in the cert_chain, for back compat)
+  string trust_roots = 10;
+
+  // If the request does not include a CSR, generate a private key as well.
+  string key_pem = 11;
+
+  string tlsCrt = 12;
 }
 
 // Service for managing certificates issued by the CA.

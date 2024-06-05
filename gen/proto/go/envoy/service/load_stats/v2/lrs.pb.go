@@ -7,11 +7,11 @@
 package v2
 
 import (
+	protobuf "github.com/costinm/grpc-mesh/gen/proto/go/google/protobuf"
 	xds "github.com/costinm/grpc-mesh/gen/proto/go/xds"
 	duration "github.com/golang/protobuf/ptypes/duration"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	structpb "google.golang.org/protobuf/types/known/structpb"
 	reflect "reflect"
 	sync "sync"
 )
@@ -303,7 +303,7 @@ type UpstreamEndpointStats struct {
 	Address *xds.Address `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	// Opaque and implementation dependent metadata of the
 	// endpoint. Envoy will pass this directly to the management server.
-	Metadata *structpb.Struct `protobuf:"bytes,6,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata *protobuf.Struct `protobuf:"bytes,6,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// The total number of requests successfully completed by the endpoints in the
 	// locality. These include non-5xx responses for HTTP, where errors
 	// originate at the client and the endpoint responded successfully. For gRPC,
@@ -369,7 +369,7 @@ func (x *UpstreamEndpointStats) GetAddress() *xds.Address {
 	return nil
 }
 
-func (x *UpstreamEndpointStats) GetMetadata() *structpb.Struct {
+func (x *UpstreamEndpointStats) GetMetadata() *protobuf.Struct {
 	if x != nil {
 		return x.Metadata
 	}
@@ -831,7 +831,7 @@ var file_envoy_service_load_stats_v2_lrs_proto_goTypes = []interface{}{
 	(*duration.Duration)(nil),            // 8: google.protobuf.Duration
 	(*xds.Locality)(nil),                 // 9: xds.Locality
 	(*xds.Address)(nil),                  // 10: xds.Address
-	(*structpb.Struct)(nil),              // 11: google.protobuf.Struct
+	(*protobuf.Struct)(nil),              // 11: google.protobuf.Struct
 }
 var file_envoy_service_load_stats_v2_lrs_proto_depIdxs = []int32{
 	7,  // 0: envoy.service.load_stats.v2.LoadStatsRequest.node:type_name -> xds.Node

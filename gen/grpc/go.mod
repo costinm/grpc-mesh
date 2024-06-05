@@ -1,4 +1,4 @@
-module github.com/costinm/grpc-mesh/gen/proto
+module github.com/costinm/grpc-mesh/gen/grpc
 
 go 1.22
 
