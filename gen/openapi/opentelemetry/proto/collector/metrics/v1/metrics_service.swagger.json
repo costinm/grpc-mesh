@@ -1,0 +1,674 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "opentelemetry/proto/collector/metrics/v1/metrics_service.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "MetricsService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "ExponentialHistogramDataPointBuckets": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Offset is the bucket index of the first entry in the bucket_counts array.\n\nNote: This uses a varint encoding as a simple form of compression."
+        },
+        "bucketCounts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uint64"
+          },
+          "description": "Count is an array of counts, where count[i] carries the count\nof the bucket at index (offset+i).  count[i] is the count of\nvalues greater than base^(offset+i) and less or equal to than\nbase^(offset+i+1).\n\nNote: By contrast, the explicit HistogramDataPoint uses\nfixed64.  This field is expected to have many buckets,\nespecially zeros, so uint64 has been selected to ensure\nvarint encoding."
+        }
+      },
+      "description": "Buckets are a set of bucket counts, encoded in a contiguous array\nof counts."
+    },
+    "SummaryDataPointValueAtQuantile": {
+      "type": "object",
+      "properties": {
+        "quantile": {
+          "type": "number",
+          "format": "double",
+          "description": "The quantile of a distribution. Must be in the interval\n[0.0, 1.0]."
+        },
+        "value": {
+          "type": "number",
+          "format": "double",
+          "description": "The value at the given quantile of a distribution.\n\nQuantile values must NOT be negative."
+        }
+      },
+      "description": "Represents the value at a given quantile of a distribution.\n\nTo record Min and Max values following conventions are used:\n- The 1.0 quantile is equivalent to the maximum value observed.\n- The 0.0 quantile is equivalent to the minimum value observed.\n\nSee the following issue for more context:\nhttps://github.com/open-telemetry/opentelemetry-proto/issues/125"
+    },
+    "googleprotobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com. As of May 2023, there are no widely used type server\nimplementations and no plans to implement one.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        }
+      },
+      "additionalProperties": {},
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n    // or ...\n    if (any.isSameTypeAs(Foo.getDefaultInstance())) {\n      foo = any.unpack(Foo.getDefaultInstance());\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := \u0026pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "googlerpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code]."
+        },
+        "message": {
+          "type": "string",
+          "description": "A developer-facing error message, which should be in English. Any\nuser-facing error message should be localized and sent in the\n[google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client."
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/googleprotobufAny"
+          },
+          "description": "A list of messages that carry the error details.  There is a common set of\nmessage types for APIs to use."
+        }
+      },
+      "description": "The `Status` type defines a logical error model that is suitable for\ndifferent programming environments, including REST APIs and RPC APIs. It is\nused by [gRPC](https://github.com/grpc). Each `Status` message contains\nthree pieces of data: error code, error message, and error details.\n\nYou can find out more about this error model and how to work with it in the\n[API Design Guide](https://cloud.google.com/apis/design/errors)."
+    },
+    "metricsv1Exemplar": {
+      "type": "object",
+      "properties": {
+        "filteredAttributes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1KeyValue"
+          },
+          "title": "The set of key/value pairs that were filtered out by the aggregator, but\nrecorded alongside the original measurement. Only key/value pairs that were\nfiltered out by the aggregator should be included"
+        },
+        "timeUnixNano": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January\n1970.",
+          "title": "time_unix_nano is the exact time when this exemplar was recorded"
+        },
+        "asDouble": {
+          "type": "number",
+          "format": "double"
+        },
+        "asInt": {
+          "type": "string",
+          "format": "int64"
+        },
+        "spanId": {
+          "type": "string",
+          "format": "byte",
+          "description": "(Optional) Span ID of the exemplar trace.\nspan_id may be missing if the measurement is not recorded inside a trace\nor if the trace is not sampled."
+        },
+        "traceId": {
+          "type": "string",
+          "format": "byte",
+          "description": "(Optional) Trace ID of the exemplar trace.\ntrace_id may be missing if the measurement is not recorded inside a trace\nor if the trace is not sampled."
+        }
+      },
+      "description": "A representation of an exemplar, which is a sample input measurement.\nExemplars also hold information about the environment when the measurement\nwas recorded, for example the span and trace ID of the active span when the\nexemplar was recorded."
+    },
+    "metricsv1Histogram": {
+      "type": "object",
+      "properties": {
+        "dataPoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1HistogramDataPoint"
+          }
+        },
+        "aggregationTemporality": {
+          "$ref": "#/definitions/v1AggregationTemporality",
+          "description": "aggregation_temporality describes if the aggregator reports delta changes\nsince last report time, or cumulative changes since a fixed start time."
+        }
+      },
+      "description": "Histogram represents the type of a metric that is calculated by aggregating\nas a Histogram of all reported measurements over a time interval."
+    },
+    "metricsv1Metric": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "name of the metric, including its DNS name prefix. It must be unique."
+        },
+        "description": {
+          "type": "string",
+          "description": "description of the metric, which can be used in documentation."
+        },
+        "unit": {
+          "type": "string",
+          "description": "unit in which the metric value is reported. Follows the format\ndescribed by http://unitsofmeasure.org/ucum.html."
+        },
+        "gauge": {
+          "$ref": "#/definitions/v1Gauge"
+        },
+        "sum": {
+          "$ref": "#/definitions/v1Sum"
+        },
+        "histogram": {
+          "$ref": "#/definitions/metricsv1Histogram"
+        },
+        "exponentialHistogram": {
+          "$ref": "#/definitions/v1ExponentialHistogram"
+        },
+        "summary": {
+          "$ref": "#/definitions/v1Summary"
+        }
+      },
+      "description": "https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/data-model.md\n\n\nThe data model and relation between entities is shown in the\ndiagram below. Here, \"DataPoint\" is the term used to refer to any\none of the specific data point value types, and \"points\" is the term used\nto refer to any one of the lists of points contained in the Metric.\n\n- Metric is composed of a metadata and data.\n- Metadata part contains a name, description, unit.\n- Data is one of the possible types (Sum, Gauge, Histogram, Summary).\n- DataPoint contains timestamps, attributes, and one of the possible value type\n  fields.\n\n    Metric\n +------------+\n |name        |\n |description |\n |unit        |     +------------------------------------+\n |data        |---\u003e |Gauge, Sum, Histogram, Summary, ... |\n +------------+     +------------------------------------+\n\n   Data [One of Gauge, Sum, Histogram, Summary, ...]\n +-----------+\n |...        |  // Metadata about the Data.\n |points     |--+\n +-----------+  |\n                |      +---------------------------+\n                |      |DataPoint 1                |\n                v      |+------+------+   +------+ |\n             +-----+   ||label |label |...|label | |\n             |  1  |--\u003e||value1|value2|...|valueN| |\n             +-----+   |+------+------+   +------+ |\n             |  .  |   |+-----+                    |\n             |  .  |   ||value|                    |\n             |  .  |   |+-----+                    |\n             |  .  |   +---------------------------+\n             |  .  |                   .\n             |  .  |                   .\n             |  .  |                   .\n             |  .  |   +---------------------------+\n             |  .  |   |DataPoint M                |\n             +-----+   |+------+------+   +------+ |\n             |  M  |--\u003e||label |label |...|label | |\n             +-----+   ||value1|value2|...|valueN| |\n                       |+------+------+   +------+ |\n                       |+-----+                    |\n                       ||value|                    |\n                       |+-----+                    |\n                       +---------------------------+\n\nEach distinct type of DataPoint represents the output of a specific\naggregation function, the result of applying the DataPoint's\nassociated function of to one or more measurements.\n\nAll DataPoint types have three common fields:\n- Attributes includes key-value pairs associated with the data point\n- TimeUnixNano is required, set to the end time of the aggregation\n- StartTimeUnixNano is optional, but strongly encouraged for DataPoints\n  having an AggregationTemporality field, as discussed below.\n\nBoth TimeUnixNano and StartTimeUnixNano values are expressed as\nUNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January 1970.\n\n# TimeUnixNano\n\nThis field is required, having consistent interpretation across\nDataPoint types.  TimeUnixNano is the moment corresponding to when\nthe data point's aggregate value was captured.\n\nData points with the 0 value for TimeUnixNano SHOULD be rejected\nby consumers.\n\n# StartTimeUnixNano\n\nStartTimeUnixNano in general allows detecting when a sequence of\nobservations is unbroken.  This field indicates to consumers the\nstart time for points with cumulative and delta\nAggregationTemporality, and it should be included whenever possible\nto support correct rate calculation.  Although it may be omitted\nwhen the start time is truly unknown, setting StartTimeUnixNano is\nstrongly encouraged.",
+      "title": "Defines a Metric which has one or more timeseries.  The following is a\nbrief summary of the Metric data model.  For more details, see:"
+    },
+    "resourcev1Resource": {
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1KeyValue"
+          },
+          "description": "Set of attributes that describe the resource.\nAttribute keys MUST be unique (it is not allowed to have more than one\nattribute with the same key)."
+        },
+        "droppedAttributesCount": {
+          "type": "integer",
+          "format": "int64",
+          "description": "dropped_attributes_count is the number of dropped attributes. If the value is 0, then\nno attributes were dropped."
+        }
+      },
+      "description": "Resource information."
+    },
+    "v1AggregationTemporality": {
+      "type": "string",
+      "enum": [
+        "AGGREGATION_TEMPORALITY_UNSPECIFIED",
+        "AGGREGATION_TEMPORALITY_DELTA",
+        "AGGREGATION_TEMPORALITY_CUMULATIVE"
+      ],
+      "default": "AGGREGATION_TEMPORALITY_UNSPECIFIED",
+      "description": "AggregationTemporality defines how a metric aggregator reports aggregated\nvalues. It describes how those values relate to the time interval over\nwhich they are aggregated.\n\n - AGGREGATION_TEMPORALITY_UNSPECIFIED: UNSPECIFIED is the default AggregationTemporality, it MUST not be used.\n - AGGREGATION_TEMPORALITY_DELTA: DELTA is an AggregationTemporality for a metric aggregator which reports\nchanges since last report time. Successive metrics contain aggregation of\nvalues from continuous and non-overlapping intervals.\n\nThe values for a DELTA metric are based only on the time interval\nassociated with one measurement cycle. There is no dependency on\nprevious measurements like is the case for CUMULATIVE metrics.\n\nFor example, consider a system measuring the number of requests that\nit receives and reports the sum of these requests every second as a\nDELTA metric:\n\n  1. The system starts receiving at time=t_0.\n  2. A request is received, the system measures 1 request.\n  3. A request is received, the system measures 1 request.\n  4. A request is received, the system measures 1 request.\n  5. The 1 second collection cycle ends. A metric is exported for the\n     number of requests received over the interval of time t_0 to\n     t_0+1 with a value of 3.\n  6. A request is received, the system measures 1 request.\n  7. A request is received, the system measures 1 request.\n  8. The 1 second collection cycle ends. A metric is exported for the\n     number of requests received over the interval of time t_0+1 to\n     t_0+2 with a value of 2.\n - AGGREGATION_TEMPORALITY_CUMULATIVE: CUMULATIVE is an AggregationTemporality for a metric aggregator which\nreports changes since a fixed start time. This means that current values\nof a CUMULATIVE metric depend on all previous measurements since the\nstart time. Because of this, the sender is required to retain this state\nin some form. If this state is lost or invalidated, the CUMULATIVE metric\nvalues MUST be reset and a new fixed start time following the last\nreported measurement time sent MUST be used.\n\nFor example, consider a system measuring the number of requests that\nit receives and reports the sum of these requests every second as a\nCUMULATIVE metric:\n\n  1. The system starts receiving at time=t_0.\n  2. A request is received, the system measures 1 request.\n  3. A request is received, the system measures 1 request.\n  4. A request is received, the system measures 1 request.\n  5. The 1 second collection cycle ends. A metric is exported for the\n     number of requests received over the interval of time t_0 to\n     t_0+1 with a value of 3.\n  6. A request is received, the system measures 1 request.\n  7. A request is received, the system measures 1 request.\n  8. The 1 second collection cycle ends. A metric is exported for the\n     number of requests received over the interval of time t_0 to\n     t_0+2 with a value of 5.\n  9. The system experiences a fault and loses state.\n  10. The system recovers and resumes receiving at time=t_1.\n  11. A request is received, the system measures 1 request.\n  12. The 1 second collection cycle ends. A metric is exported for the\n     number of requests received over the interval of time t_1 to\n     t_0+1 with a value of 1.\n\nNote: Even though, when reporting changes since last report time, using\nCUMULATIVE is valid, it is not recommended. This may cause problems for\nsystems that do not use start_time to determine when the aggregation\nvalue was reset (e.g. Prometheus)."
+    },
+    "v1AnyValue": {
+      "type": "object",
+      "properties": {
+        "stringValue": {
+          "type": "string"
+        },
+        "boolValue": {
+          "type": "boolean"
+        },
+        "intValue": {
+          "type": "string",
+          "format": "int64"
+        },
+        "doubleValue": {
+          "type": "number",
+          "format": "double"
+        },
+        "arrayValue": {
+          "$ref": "#/definitions/v1ArrayValue"
+        },
+        "kvlistValue": {
+          "$ref": "#/definitions/v1KeyValueList"
+        },
+        "bytesValue": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "description": "AnyValue is used to represent any type of attribute value. AnyValue may contain a\nprimitive value such as a string or integer or it may contain an arbitrary nested\nobject containing arrays, key-value lists and primitives."
+    },
+    "v1ArrayValue": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1AnyValue"
+          },
+          "description": "Array of values. The array may be empty (contain 0 elements)."
+        }
+      },
+      "description": "ArrayValue is a list of AnyValue messages. We need ArrayValue as a message\nsince oneof in AnyValue does not allow repeated fields."
+    },
+    "v1ExponentialHistogram": {
+      "type": "object",
+      "properties": {
+        "dataPoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1ExponentialHistogramDataPoint"
+          }
+        },
+        "aggregationTemporality": {
+          "$ref": "#/definitions/v1AggregationTemporality",
+          "description": "aggregation_temporality describes if the aggregator reports delta changes\nsince last report time, or cumulative changes since a fixed start time."
+        }
+      },
+      "description": "ExponentialHistogram represents the type of a metric that is calculated by aggregating\nas a ExponentialHistogram of all reported double measurements over a time interval."
+    },
+    "v1ExponentialHistogramDataPoint": {
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1KeyValue"
+          },
+          "description": "The set of key/value pairs that uniquely identify the timeseries from\nwhere this point belongs. The list may be empty (may contain 0 elements).\nAttribute keys MUST be unique (it is not allowed to have more than one\nattribute with the same key)."
+        },
+        "startTimeUnixNano": {
+          "type": "string",
+          "format": "uint64",
+          "description": "StartTimeUnixNano is optional but strongly encouraged, see the\nthe detailed comments above Metric.\n\nValue is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January\n1970."
+        },
+        "timeUnixNano": {
+          "type": "string",
+          "format": "uint64",
+          "description": "TimeUnixNano is required, see the detailed comments above Metric.\n\nValue is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January\n1970."
+        },
+        "count": {
+          "type": "string",
+          "format": "uint64",
+          "description": "count is the number of values in the population. Must be\nnon-negative. This value must be equal to the sum of the \"bucket_counts\"\nvalues in the positive and negative Buckets plus the \"zero_count\" field."
+        },
+        "sum": {
+          "type": "number",
+          "format": "double",
+          "description": "sum of the values in the population. If count is zero then this field\nmust be zero.\n\nNote: Sum should only be filled out when measuring non-negative discrete\nevents, and is assumed to be monotonic over the values of these events.\nNegative events *can* be recorded, but sum should not be filled out when\ndoing so.  This is specifically to enforce compatibility w/ OpenMetrics,\nsee: https://github.com/OpenObservability/OpenMetrics/blob/main/specification/OpenMetrics.md#histogram"
+        },
+        "scale": {
+          "type": "integer",
+          "format": "int32",
+          "description": "base = (2^(2^-scale))\n\nThe histogram bucket identified by `index`, a signed integer,\ncontains values that are greater than (base^index) and\nless than or equal to (base^(index+1)).\n\nThe positive and negative ranges of the histogram are expressed\nseparately.  Negative values are mapped by their absolute value\ninto the negative range using the same scale as the positive range.\n\nscale is not restricted by the protocol, as the permissible\nvalues depend on the range of the data.",
+          "title": "scale describes the resolution of the histogram.  Boundaries are\nlocated at powers of the base, where:"
+        },
+        "zeroCount": {
+          "type": "string",
+          "format": "uint64",
+          "description": "zero_count is the count of values that are either exactly zero or\nwithin the region considered zero by the instrumentation at the\ntolerated degree of precision.  This bucket stores values that\ncannot be expressed using the standard exponential formula as\nwell as values that have been rounded to zero.\n\nImplementations MAY consider the zero bucket to have probability\nmass equal to (zero_count / count)."
+        },
+        "positive": {
+          "$ref": "#/definitions/ExponentialHistogramDataPointBuckets",
+          "description": "positive carries the positive range of exponential bucket counts."
+        },
+        "negative": {
+          "$ref": "#/definitions/ExponentialHistogramDataPointBuckets",
+          "description": "negative carries the negative range of exponential bucket counts."
+        },
+        "flags": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Flags that apply to this specific data point.  See DataPointFlags\nfor the available flags and their meaning."
+        },
+        "exemplars": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/metricsv1Exemplar"
+          },
+          "title": "(Optional) List of exemplars collected from\nmeasurements that were used to form the data point"
+        },
+        "min": {
+          "type": "number",
+          "format": "double",
+          "description": "min is the minimum value over (start_time, end_time]."
+        },
+        "max": {
+          "type": "number",
+          "format": "double",
+          "description": "max is the maximum value over (start_time, end_time]."
+        }
+      },
+      "description": "ExponentialHistogramDataPoint is a single data point in a timeseries that describes the\ntime-varying values of a ExponentialHistogram of double values. A ExponentialHistogram contains\nsummary statistics for a population of values, it may optionally contain the\ndistribution of those values across a set of buckets."
+    },
+    "v1ExportMetricsPartialSuccess": {
+      "type": "object",
+      "properties": {
+        "rejectedDataPoints": {
+          "type": "string",
+          "format": "int64",
+          "description": "The number of rejected data points.\n\nA `rejected_\u003csignal\u003e` field holding a `0` value indicates that the\nrequest was fully accepted."
+        },
+        "errorMessage": {
+          "type": "string",
+          "description": "A developer-facing human-readable message in English. It should be used\neither to explain why the server rejected parts of the data during a partial\nsuccess or to convey warnings/suggestions during a full success. The message\nshould offer guidance on how users can address such issues.\n\nerror_message is an optional field. An error_message with an empty value\nis equivalent to it not being set."
+        }
+      }
+    },
+    "v1ExportMetricsServiceResponse": {
+      "type": "object",
+      "properties": {
+        "partialSuccess": {
+          "$ref": "#/definitions/v1ExportMetricsPartialSuccess",
+          "description": "The details of a partially successful export request.\n\nIf the request is only partially accepted\n(i.e. when the server accepts only parts of the data and rejects the rest)\nthe server MUST initialize the `partial_success` field and MUST\nset the `rejected_\u003csignal\u003e` with the number of items it rejected.\n\nServers MAY also make use of the `partial_success` field to convey\nwarnings/suggestions to senders even when the request was fully accepted.\nIn such cases, the `rejected_\u003csignal\u003e` MUST have a value of `0` and\nthe `error_message` MUST be non-empty.\n\nA `partial_success` message with an empty value (rejected_\u003csignal\u003e = 0 and\n`error_message` = \"\") is equivalent to it not being set/present. Senders\nSHOULD interpret it the same way as in the full success case."
+        }
+      }
+    },
+    "v1Gauge": {
+      "type": "object",
+      "properties": {
+        "dataPoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1NumberDataPoint"
+          }
+        }
+      },
+      "description": "Gauge represents the type of a scalar metric that always exports the\n\"current value\" for every data point. It should be used for an \"unknown\"\naggregation.\n\nA Gauge does not support different aggregation temporalities. Given the\naggregation is unknown, points cannot be combined using the same\naggregation, regardless of aggregation temporalities. Therefore,\nAggregationTemporality is not included. Consequently, this also means\n\"StartTimeUnixNano\" is ignored for all data points."
+    },
+    "v1HistogramDataPoint": {
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1KeyValue"
+          },
+          "description": "The set of key/value pairs that uniquely identify the timeseries from\nwhere this point belongs. The list may be empty (may contain 0 elements).\nAttribute keys MUST be unique (it is not allowed to have more than one\nattribute with the same key)."
+        },
+        "startTimeUnixNano": {
+          "type": "string",
+          "format": "uint64",
+          "description": "StartTimeUnixNano is optional but strongly encouraged, see the\nthe detailed comments above Metric.\n\nValue is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January\n1970."
+        },
+        "timeUnixNano": {
+          "type": "string",
+          "format": "uint64",
+          "description": "TimeUnixNano is required, see the detailed comments above Metric.\n\nValue is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January\n1970."
+        },
+        "count": {
+          "type": "string",
+          "format": "uint64",
+          "description": "count is the number of values in the population. Must be non-negative. This\nvalue must be equal to the sum of the \"count\" fields in buckets if a\nhistogram is provided."
+        },
+        "sum": {
+          "type": "number",
+          "format": "double",
+          "description": "sum of the values in the population. If count is zero then this field\nmust be zero.\n\nNote: Sum should only be filled out when measuring non-negative discrete\nevents, and is assumed to be monotonic over the values of these events.\nNegative events *can* be recorded, but sum should not be filled out when\ndoing so.  This is specifically to enforce compatibility w/ OpenMetrics,\nsee: https://github.com/OpenObservability/OpenMetrics/blob/main/specification/OpenMetrics.md#histogram"
+        },
+        "bucketCounts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uint64"
+          },
+          "description": "bucket_counts is an optional field contains the count values of histogram\nfor each bucket.\n\nThe sum of the bucket_counts must equal the value in the count field.\n\nThe number of elements in bucket_counts array must be by one greater than\nthe number of elements in explicit_bounds array."
+        },
+        "explicitBounds": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "description": "explicit_bounds specifies buckets with explicitly defined bounds for values.\n\nThe boundaries for bucket at index i are:\n\n(-infinity, explicit_bounds[i]] for i == 0\n(explicit_bounds[i-1], explicit_bounds[i]] for 0 \u003c i \u003c size(explicit_bounds)\n(explicit_bounds[i-1], +infinity) for i == size(explicit_bounds)\n\nThe values in the explicit_bounds array must be strictly increasing.\n\nHistogram buckets are inclusive of their upper boundary, except the last\nbucket where the boundary is at infinity. This format is intentionally\ncompatible with the OpenMetrics histogram definition."
+        },
+        "exemplars": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/metricsv1Exemplar"
+          },
+          "title": "(Optional) List of exemplars collected from\nmeasurements that were used to form the data point"
+        },
+        "flags": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Flags that apply to this specific data point.  See DataPointFlags\nfor the available flags and their meaning."
+        },
+        "min": {
+          "type": "number",
+          "format": "double",
+          "description": "min is the minimum value over (start_time, end_time]."
+        },
+        "max": {
+          "type": "number",
+          "format": "double",
+          "description": "max is the maximum value over (start_time, end_time]."
+        }
+      },
+      "description": "HistogramDataPoint is a single data point in a timeseries that describes the\ntime-varying values of a Histogram. A Histogram contains summary statistics\nfor a population of values, it may optionally contain the distribution of\nthose values across a set of buckets.\n\nIf the histogram contains the distribution of values, then both\n\"explicit_bounds\" and \"bucket counts\" fields must be defined.\nIf the histogram does not contain the distribution of values, then both\n\"explicit_bounds\" and \"bucket_counts\" must be omitted and only \"count\" and\n\"sum\" are known."
+    },
+    "v1InstrumentationScope": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "An empty instrumentation scope name means the name is unknown."
+        },
+        "version": {
+          "type": "string"
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1KeyValue"
+          }
+        },
+        "droppedAttributesCount": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "description": "InstrumentationScope is a message representing the instrumentation scope information\nsuch as the fully qualified name and version."
+    },
+    "v1KeyValue": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/v1AnyValue"
+        }
+      },
+      "description": "KeyValue is a key-value pair that is used to store Span attributes, Link\nattributes, etc."
+    },
+    "v1KeyValueList": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1KeyValue"
+          },
+          "description": "A collection of key/value pairs of key-value pairs. The list may be empty (may\ncontain 0 elements).\nThe keys MUST be unique (it is not allowed to have more than one\nvalue with the same key)."
+        }
+      },
+      "description": "KeyValueList is a list of KeyValue messages. We need KeyValueList as a message\nsince `oneof` in AnyValue does not allow repeated fields. Everywhere else where we need\na list of KeyValue messages (e.g. in Span) we use `repeated KeyValue` directly to\navoid unnecessary extra wrapping (which slows down the protocol). The 2 approaches\nare semantically equivalent."
+    },
+    "v1NumberDataPoint": {
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1KeyValue"
+          },
+          "description": "The set of key/value pairs that uniquely identify the timeseries from\nwhere this point belongs. The list may be empty (may contain 0 elements).\nAttribute keys MUST be unique (it is not allowed to have more than one\nattribute with the same key)."
+        },
+        "startTimeUnixNano": {
+          "type": "string",
+          "format": "uint64",
+          "description": "StartTimeUnixNano is optional but strongly encouraged, see the\nthe detailed comments above Metric.\n\nValue is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January\n1970."
+        },
+        "timeUnixNano": {
+          "type": "string",
+          "format": "uint64",
+          "description": "TimeUnixNano is required, see the detailed comments above Metric.\n\nValue is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January\n1970."
+        },
+        "asDouble": {
+          "type": "number",
+          "format": "double"
+        },
+        "asInt": {
+          "type": "string",
+          "format": "int64"
+        },
+        "exemplars": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/metricsv1Exemplar"
+          },
+          "title": "(Optional) List of exemplars collected from\nmeasurements that were used to form the data point"
+        },
+        "flags": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Flags that apply to this specific data point.  See DataPointFlags\nfor the available flags and their meaning."
+        }
+      },
+      "description": "NumberDataPoint is a single data point in a timeseries that describes the\ntime-varying scalar value of a metric."
+    },
+    "v1ResourceMetrics": {
+      "type": "object",
+      "properties": {
+        "resource": {
+          "$ref": "#/definitions/resourcev1Resource",
+          "description": "The resource for the metrics in this message.\nIf this field is not set then no resource info is known."
+        },
+        "scopeMetrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1ScopeMetrics"
+          },
+          "description": "A list of metrics that originate from a resource."
+        },
+        "schemaUrl": {
+          "type": "string",
+          "description": "This schema_url applies to the data in the \"resource\" field. It does not apply\nto the data in the \"scope_metrics\" field which have their own schema_url field."
+        }
+      },
+      "description": "A collection of ScopeMetrics from a Resource."
+    },
+    "v1ScopeMetrics": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "$ref": "#/definitions/v1InstrumentationScope",
+          "description": "The instrumentation scope information for the metrics in this message.\nSemantically when InstrumentationScope isn't set, it is equivalent with\nan empty instrumentation scope name (unknown)."
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/metricsv1Metric"
+          },
+          "description": "A list of metrics that originate from an instrumentation library."
+        },
+        "schemaUrl": {
+          "type": "string",
+          "description": "This schema_url applies to all metrics in the \"metrics\" field."
+        }
+      },
+      "description": "A collection of Metrics produced by an Scope."
+    },
+    "v1Sum": {
+      "type": "object",
+      "properties": {
+        "dataPoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1NumberDataPoint"
+          }
+        },
+        "aggregationTemporality": {
+          "$ref": "#/definitions/v1AggregationTemporality",
+          "description": "aggregation_temporality describes if the aggregator reports delta changes\nsince last report time, or cumulative changes since a fixed start time."
+        },
+        "isMonotonic": {
+          "type": "boolean",
+          "description": "If \"true\" means that the sum is monotonic."
+        }
+      },
+      "description": "Sum represents the type of a scalar metric that is calculated as a sum of all\nreported measurements over a time interval."
+    },
+    "v1Summary": {
+      "type": "object",
+      "properties": {
+        "dataPoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1SummaryDataPoint"
+          }
+        }
+      },
+      "description": "Summary metric data are used to convey quantile summaries,\na Prometheus (see: https://prometheus.io/docs/concepts/metric_types/#summary)\nand OpenMetrics (see: https://github.com/OpenObservability/OpenMetrics/blob/4dbf6075567ab43296eed941037c12951faafb92/protos/prometheus.proto#L45)\ndata type. These data points cannot always be merged in a meaningful way.\nWhile they can be useful in some applications, histogram data points are\nrecommended for new applications."
+    },
+    "v1SummaryDataPoint": {
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1KeyValue"
+          },
+          "description": "The set of key/value pairs that uniquely identify the timeseries from\nwhere this point belongs. The list may be empty (may contain 0 elements).\nAttribute keys MUST be unique (it is not allowed to have more than one\nattribute with the same key)."
+        },
+        "startTimeUnixNano": {
+          "type": "string",
+          "format": "uint64",
+          "description": "StartTimeUnixNano is optional but strongly encouraged, see the\nthe detailed comments above Metric.\n\nValue is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January\n1970."
+        },
+        "timeUnixNano": {
+          "type": "string",
+          "format": "uint64",
+          "description": "TimeUnixNano is required, see the detailed comments above Metric.\n\nValue is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January\n1970."
+        },
+        "count": {
+          "type": "string",
+          "format": "uint64",
+          "description": "count is the number of values in the population. Must be non-negative."
+        },
+        "sum": {
+          "type": "number",
+          "format": "double",
+          "description": "sum of the values in the population. If count is zero then this field\nmust be zero.\n\nNote: Sum should only be filled out when measuring non-negative discrete\nevents, and is assumed to be monotonic over the values of these events.\nNegative events *can* be recorded, but sum should not be filled out when\ndoing so.  This is specifically to enforce compatibility w/ OpenMetrics,\nsee: https://github.com/OpenObservability/OpenMetrics/blob/main/specification/OpenMetrics.md#summary"
+        },
+        "quantileValues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/SummaryDataPointValueAtQuantile"
+          },
+          "description": "(Optional) list of values at different quantiles of the distribution calculated\nfrom the current snapshot. The quantiles must be strictly increasing."
+        },
+        "flags": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Flags that apply to this specific data point.  See DataPointFlags\nfor the available flags and their meaning."
+        }
+      },
+      "description": "SummaryDataPoint is a single data point in a timeseries that describes the\ntime-varying values of a Summary metric."
+    }
+  }
+}

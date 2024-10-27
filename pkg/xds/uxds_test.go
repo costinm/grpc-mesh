@@ -14,7 +14,7 @@ var ctx = context.Background()
 func TestCert(t *testing.T) {
 	k, err := k8s.New(ctx, nil)
 
-	ma, err := meshauth.FromEnv(context.Background(), nil)
+	ma, err := meshauth.FromEnv(context.Background(), nil, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,7 +28,7 @@ func TestCert(t *testing.T) {
 		// L4Secure: true,
 	}
 
-	certs, err := istioca.GetCertIstio(ctx, ma, dest, 0, "")
+	_, certs, err := istioca.GetCertIstio(ctx, ma, dest, 0, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,11 +38,12 @@ func TestCert(t *testing.T) {
 func TestUXDC(t *testing.T) {
 	k, err := k8s.New(ctx, nil)
 
-	ma, err := meshauth.FromEnv(context.Background(), nil)
+	ma, err := meshauth.FromEnv(context.Background(), nil, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	// TODO: replace with MDS
 	ma.AuthProviders["istio-ca"] = &meshauth.AudienceOverrideTokenSource{TokenSource: k.Default, Audience: "istio-ca"}
 
 	// CA is only exposed on 15012 - we need a HA-PROXY version with ztunnel.

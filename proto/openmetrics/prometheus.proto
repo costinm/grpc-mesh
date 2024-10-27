@@ -8,7 +8,7 @@ syntax = "proto3";
 package openmetrics;
 
 import "google/protobuf/timestamp.proto";
-option go_package = "github.com/costinm/ugate/gen/proto/go/openmetrics";
+option go_package = "github.com/costinm/grpc-mesh/gen/proto/go/openmetrics";
 
 // The top-level container type that is encoded and sent over the wire.
 message MetricSet {

@@ -17,6 +17,8 @@ syntax = "proto3";
 package istio.workload;
 option go_package="github.com/costinm/grpc-mesh/gen/proto/go/xds";
 
+// This is in pkg/workload and ztunnel - seems the pkg one is the real one.
+
 message Workload {
   // Name represents the name for the workload.
   // For Kubernetes, this is the pod name.

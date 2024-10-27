@@ -6,7 +6,8 @@ import (
 
 	connect_go "github.com/bufbuild/connect-go"
 	lrspb "github.com/costinm/grpc-mesh/gen/proto/go/envoy/service/load_stats/v2"
-	"google.golang.org/protobuf/types/known/durationpb"
+	"github.com/golang/protobuf/ptypes/duration"
+
 	"log"
 	"sync"
 )
@@ -35,7 +36,7 @@ func (l *LRS) StreamLoadStats(ctx context.Context, s *connect_go.BidiStream[lrsp
 
 	// Send all clusters - instead of selective list
 	s.Send(&lrspb.LoadStatsResponse{SendAllClusters: true,
-		LoadReportingInterval:     &durationpb.Duration{Seconds: 60},
+		LoadReportingInterval:     &duration.Duration{Seconds: 60},
 		ReportEndpointGranularity: true,
 	})
 	for {

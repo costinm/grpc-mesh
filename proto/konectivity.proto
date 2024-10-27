@@ -21,7 +21,7 @@ syntax = "proto3";
 // Sliding windows?
 
 //option go_package = "sigs.k8s.io/apiserver-network-proxy/konnectivity-client/proto/client";
-option go_package = "github.com/costinm/ugate/gen/proto";
+option go_package = "github.com/costinm/grpc-mesh/gen/proto/go";
 
 service ProxyService {
   rpc Proxy(stream Packet) returns (stream Packet) {}

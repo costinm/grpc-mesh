@@ -1,0 +1,51 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "istio/networking/v1/virtual_service.proto",
+    "description": "Configuration affecting traffic routing. Here are a few terms useful to define\nin the context of traffic routing.\n\n`Service` a unit of application behavior bound to a unique name in a\nservice registry. Services consist of multiple network *endpoints*\nimplemented by workload instances running on pods, containers, VMs etc.\n\n`Service versions (a.k.a. subsets)` - In a continuous deployment\nscenario, for a given service, there can be distinct subsets of\ninstances running different variants of the application binary. These\nvariants are not necessarily different API versions. They could be\niterative changes to the same service, deployed in different\nenvironments (prod, staging, dev, etc.). Common scenarios where this\noccurs include A/B testing, canary rollouts, etc. The choice of a\nparticular version can be decided based on various criterion (headers,\nurl, etc.) and/or by weights assigned to each version. Each service has\na default version consisting of all its instances.\n\n`Source` - A downstream client calling a service.\n\n`Host` - The address used by a client when attempting to connect to a\nservice.\n\n`Access model` - Applications address only the destination service\n(Host) without knowledge of individual service versions (subsets). The\nactual choice of the version is determined by the proxy/sidecar, enabling the\napplication code to decouple itself from the evolution of dependent\nservices.\n\nA `VirtualService` defines a set of traffic routing rules to apply when a host is\naddressed. Each routing rule defines matching criteria for traffic of a specific\nprotocol. If the traffic is matched, then it is sent to a named destination service\n(or subset/version of it) defined in the registry.\n\nThe source of traffic can also be matched in a routing rule. This allows routing\nto be customized for specific client contexts.\n\nThe following example on Kubernetes, routes all HTTP traffic by default to\npods of the reviews service with label \"version: v1\". In addition,\nHTTP requests with path starting with /wpcatalog/ or /consumercatalog/ will\nbe rewritten to /newcatalog and sent to pods with label \"version: v2\".\n\n\n{{\u003ctabset category-name=\"example\"\u003e}}\n{{\u003ctab name=\"v1alpha3\" category-value=\"v1alpha3\"\u003e}}\n```yaml\napiVersion: networking.istio.io/v1alpha3\nkind: VirtualService\nmetadata:\n  name: reviews-route\nspec:\n  hosts:\n  - reviews.prod.svc.cluster.local\n  http:\n  - name: \"reviews-v2-routes\"\n    match:\n    - uri:\n        prefix: \"/wpcatalog\"\n    - uri:\n        prefix: \"/consumercatalog\"\n    rewrite:\n      uri: \"/newcatalog\"\n    route:\n    - destination:\n        host: reviews.prod.svc.cluster.local\n        subset: v2\n  - name: \"reviews-v1-route\"\n    route:\n    - destination:\n        host: reviews.prod.svc.cluster.local\n        subset: v1\n```\n{{\u003c/tab\u003e}}\n\n{{\u003ctab name=\"v1beta1\" category-value=\"v1beta1\"\u003e}}\n```yaml\napiVersion: networking.istio.io/v1beta1\nkind: VirtualService\nmetadata:\n  name: reviews-route\nspec:\n  hosts:\n  - reviews.prod.svc.cluster.local\n  http:\n  - name: \"reviews-v2-routes\"\n    match:\n    - uri:\n        prefix: \"/wpcatalog\"\n    - uri:\n        prefix: \"/consumercatalog\"\n    rewrite:\n      uri: \"/newcatalog\"\n    route:\n    - destination:\n        host: reviews.prod.svc.cluster.local\n        subset: v2\n  - name: \"reviews-v1-route\"\n    route:\n    - destination:\n        host: reviews.prod.svc.cluster.local\n        subset: v1\n```\n{{\u003c/tab\u003e}}\n{{\u003c/tabset\u003e}}\n\nA subset/version of a route destination is identified with a reference\nto a named service subset which must be declared in a corresponding\n`DestinationRule`.\n\n{{\u003ctabset category-name=\"example\"\u003e}}\n{{\u003ctab name=\"v1alpha3\" category-value=\"v1alpha3\"\u003e}}\n```yaml\napiVersion: networking.istio.io/v1alpha3\nkind: DestinationRule\nmetadata:\n  name: reviews-destination\nspec:\n  host: reviews.prod.svc.cluster.local\n  subsets:\n  - name: v1\n    labels:\n      version: v1\n  - name: v2\n    labels:\n      version: v2\n```\n{{\u003c/tab\u003e}}\n\n{{\u003ctab name=\"v1beta1\" category-value=\"v1beta1\"\u003e}}\n```yaml\napiVersion: networking.istio.io/v1beta1\nkind: DestinationRule\nmetadata:\n  name: reviews-destination\nspec:\n  host: reviews.prod.svc.cluster.local\n  subsets:\n  - name: v1\n    labels:\n      version: v1\n  - name: v2\n    labels:\n      version: v2\n```\n{{\u003c/tab\u003e}}\n{{\u003c/tabset\u003e}}",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "googleprotobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com. As of May 2023, there are no widely used type server\nimplementations and no plans to implement one.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        }
+      },
+      "additionalProperties": {},
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n    // or ...\n    if (any.isSameTypeAs(Foo.getDefaultInstance())) {\n      foo = any.unpack(Foo.getDefaultInstance());\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := \u0026pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "googlerpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code]."
+        },
+        "message": {
+          "type": "string",
+          "description": "A developer-facing error message, which should be in English. Any\nuser-facing error message should be localized and sent in the\n[google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client."
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/googleprotobufAny"
+          },
+          "description": "A list of messages that carry the error details.  There is a common set of\nmessage types for APIs to use."
+        }
+      },
+      "description": "The `Status` type defines a logical error model that is suitable for\ndifferent programming environments, including REST APIs and RPC APIs. It is\nused by [gRPC](https://github.com/grpc). Each `Status` message contains\nthree pieces of data: error code, error message, and error details.\n\nYou can find out more about this error model and how to work with it in the\n[API Design Guide](https://cloud.google.com/apis/design/errors)."
+    }
+  }
+}

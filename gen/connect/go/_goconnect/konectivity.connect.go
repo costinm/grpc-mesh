@@ -16,13 +16,13 @@
 //
 // Source: konectivity.proto
 
-package protoconnect
+package _goconnect
 
 import (
 	context "context"
 	errors "errors"
 	connect_go "github.com/bufbuild/connect-go"
-	proto "github.com/costinm/ugate/gen/proto"
+	_go "github.com/costinm/grpc-mesh/gen/proto/go"
 	http "net/http"
 	strings "strings"
 )
@@ -57,7 +57,7 @@ const (
 
 // ProxyServiceClient is a client for the ProxyService service.
 type ProxyServiceClient interface {
-	Proxy(context.Context) *connect_go.BidiStreamForClient[proto.Packet, proto.Packet]
+	Proxy(context.Context) *connect_go.BidiStreamForClient[_go.Packet, _go.Packet]
 }
 
 // NewProxyServiceClient constructs a client for the ProxyService service. By default, it uses the
@@ -70,7 +70,7 @@ type ProxyServiceClient interface {
 func NewProxyServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) ProxyServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &proxyServiceClient{
-		proxy: connect_go.NewClient[proto.Packet, proto.Packet](
+		proxy: connect_go.NewClient[_go.Packet, _go.Packet](
 			httpClient,
 			baseURL+ProxyServiceProxyProcedure,
 			opts...,
@@ -80,17 +80,17 @@ func NewProxyServiceClient(httpClient connect_go.HTTPClient, baseURL string, opt
 
 // proxyServiceClient implements ProxyServiceClient.
 type proxyServiceClient struct {
-	proxy *connect_go.Client[proto.Packet, proto.Packet]
+	proxy *connect_go.Client[_go.Packet, _go.Packet]
 }
 
 // Proxy calls ProxyService.Proxy.
-func (c *proxyServiceClient) Proxy(ctx context.Context) *connect_go.BidiStreamForClient[proto.Packet, proto.Packet] {
+func (c *proxyServiceClient) Proxy(ctx context.Context) *connect_go.BidiStreamForClient[_go.Packet, _go.Packet] {
 	return c.proxy.CallBidiStream(ctx)
 }
 
 // ProxyServiceHandler is an implementation of the ProxyService service.
 type ProxyServiceHandler interface {
-	Proxy(context.Context, *connect_go.BidiStream[proto.Packet, proto.Packet]) error
+	Proxy(context.Context, *connect_go.BidiStream[_go.Packet, _go.Packet]) error
 }
 
 // NewProxyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -117,14 +117,14 @@ func NewProxyServiceHandler(svc ProxyServiceHandler, opts ...connect_go.HandlerO
 // UnimplementedProxyServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedProxyServiceHandler struct{}
 
-func (UnimplementedProxyServiceHandler) Proxy(context.Context, *connect_go.BidiStream[proto.Packet, proto.Packet]) error {
+func (UnimplementedProxyServiceHandler) Proxy(context.Context, *connect_go.BidiStream[_go.Packet, _go.Packet]) error {
 	return connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ProxyService.Proxy is not implemented"))
 }
 
 // AgentServiceClient is a client for the AgentService service.
 type AgentServiceClient interface {
 	// Agent Identifier?
-	Connect(context.Context) *connect_go.BidiStreamForClient[proto.Packet, proto.Packet]
+	Connect(context.Context) *connect_go.BidiStreamForClient[_go.Packet, _go.Packet]
 }
 
 // NewAgentServiceClient constructs a client for the AgentService service. By default, it uses the
@@ -137,7 +137,7 @@ type AgentServiceClient interface {
 func NewAgentServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) AgentServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &agentServiceClient{
-		connect: connect_go.NewClient[proto.Packet, proto.Packet](
+		connect: connect_go.NewClient[_go.Packet, _go.Packet](
 			httpClient,
 			baseURL+AgentServiceConnectProcedure,
 			opts...,
@@ -147,18 +147,18 @@ func NewAgentServiceClient(httpClient connect_go.HTTPClient, baseURL string, opt
 
 // agentServiceClient implements AgentServiceClient.
 type agentServiceClient struct {
-	connect *connect_go.Client[proto.Packet, proto.Packet]
+	connect *connect_go.Client[_go.Packet, _go.Packet]
 }
 
 // Connect calls AgentService.Connect.
-func (c *agentServiceClient) Connect(ctx context.Context) *connect_go.BidiStreamForClient[proto.Packet, proto.Packet] {
+func (c *agentServiceClient) Connect(ctx context.Context) *connect_go.BidiStreamForClient[_go.Packet, _go.Packet] {
 	return c.connect.CallBidiStream(ctx)
 }
 
 // AgentServiceHandler is an implementation of the AgentService service.
 type AgentServiceHandler interface {
 	// Agent Identifier?
-	Connect(context.Context, *connect_go.BidiStream[proto.Packet, proto.Packet]) error
+	Connect(context.Context, *connect_go.BidiStream[_go.Packet, _go.Packet]) error
 }
 
 // NewAgentServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -185,6 +185,6 @@ func NewAgentServiceHandler(svc AgentServiceHandler, opts ...connect_go.HandlerO
 // UnimplementedAgentServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedAgentServiceHandler struct{}
 
-func (UnimplementedAgentServiceHandler) Connect(context.Context, *connect_go.BidiStream[proto.Packet, proto.Packet]) error {
+func (UnimplementedAgentServiceHandler) Connect(context.Context, *connect_go.BidiStream[_go.Packet, _go.Packet]) error {
 	return connect_go.NewError(connect_go.CodeUnimplemented, errors.New("AgentService.Connect is not implemented"))
 }

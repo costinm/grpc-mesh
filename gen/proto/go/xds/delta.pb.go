@@ -7,10 +7,10 @@
 package xds
 
 import (
-	any1 "github.com/golang/protobuf/ptypes/any"
-	duration "github.com/golang/protobuf/ptypes/duration"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	anypb "google.golang.org/protobuf/types/known/anypb"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	reflect "reflect"
 	sync "sync"
 )
@@ -174,7 +174,7 @@ type Resource struct {
 	// The resource being tracked.
 	//
 	//	google.protobuf.Any resource = 2;
-	Resource *any1.Any `protobuf:"bytes,2,opt,name=resource,proto3" json:"resource,omitempty"`
+	Resource *anypb.Any `protobuf:"bytes,2,opt,name=resource,proto3" json:"resource,omitempty"`
 	// Time-to-live value for the resource. For each resource, a timer is started. The timer is
 	// reset each time the resource is received with a new TTL. If the resource is received with
 	// no TTL set, the timer is removed for the resource. Upon expiration of the timer, the
@@ -188,7 +188,7 @@ type Resource struct {
 	// a management server failure. For example, the feature may be used for fault injection
 	// testing where the fault injection should be terminated in the event that Envoy loses contact
 	// with the management server.
-	Ttl *duration.Duration `protobuf:"bytes,6,opt,name=ttl,proto3" json:"ttl,omitempty"`
+	Ttl *durationpb.Duration `protobuf:"bytes,6,opt,name=ttl,proto3" json:"ttl,omitempty"`
 	// Cache control properties for the resource.
 	// [#not-implemented-hide:]
 	CacheControl *Resource_CacheControl `protobuf:"bytes,7,opt,name=cache_control,json=cacheControl,proto3" json:"cache_control,omitempty"`
@@ -247,14 +247,14 @@ func (x *Resource) GetVersion() string {
 	return ""
 }
 
-func (x *Resource) GetResource() *any1.Any {
+func (x *Resource) GetResource() *anypb.Any {
 	if x != nil {
 		return x.Resource
 	}
 	return nil
 }
 
-func (x *Resource) GetTtl() *duration.Duration {
+func (x *Resource) GetTtl() *durationpb.Duration {
 	if x != nil {
 		return x.Ttl
 	}
@@ -509,8 +509,8 @@ var file_xds_delta_proto_goTypes = []interface{}{
 	(*Resource_CacheControl)(nil),  // 4: xds.Resource.CacheControl
 	(*Node)(nil),                   // 5: xds.Node
 	(*Status)(nil),                 // 6: xds.Status
-	(*any1.Any)(nil),               // 7: google.protobuf.Any
-	(*duration.Duration)(nil),      // 8: google.protobuf.Duration
+	(*anypb.Any)(nil),              // 7: google.protobuf.Any
+	(*durationpb.Duration)(nil),    // 8: google.protobuf.Duration
 }
 var file_xds_delta_proto_depIdxs = []int32{
 	5, // 0: xds.DeltaDiscoveryRequest.node:type_name -> xds.Node

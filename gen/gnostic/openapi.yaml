@@ -1,0 +1,249 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: Operations API
+    description: |-
+        Manages long-running operations with an API service.
+
+         When an API method normally takes long time to complete, it can be designed
+         to return [Operation][google.longrunning.Operation] to the client, and the client can use this
+         interface to receive the real response asynchronously by polling the
+         operation resource, or pass the operation resource to another API (such as
+         Google Cloud Pub/Sub API) to receive the response.  Any API service that
+         returns long-running operations should implement the `Operations` interface
+         so developers can have a consistent client experience.
+    version: 0.0.1
+servers:
+    - url: https://longrunning.googleapis.com
+paths:
+    /v1/operations:
+        get:
+            tags:
+                - Operations
+            description: |-
+                Lists operations that match the specified filter in the request. If the
+                 server doesn't support this method, it returns `UNIMPLEMENTED`.
+
+                 NOTE: the `name` binding allows API services to override the binding
+                 to use different resource name schemes, such as `users/*/operations`. To
+                 override the binding, API services can add a binding such as
+                 `"/v1/{name=users/*}/operations"` to their service configuration.
+                 For backwards compatibility, the default name includes the operations
+                 collection id, however overriding users must ensure the name binding
+                 is the parent resource, without the operations collection id.
+            operationId: Operations_ListOperations
+            parameters:
+                - name: filter
+                  in: query
+                  description: The standard list filter.
+                  schema:
+                    type: string
+                - name: pageSize
+                  in: query
+                  description: The standard list page size.
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageToken
+                  in: query
+                  description: The standard list page token.
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListOperationsResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/operations/{operation}:
+        get:
+            tags:
+                - Operations
+            description: |-
+                Gets the latest state of a long-running operation.  Clients can use this
+                 method to poll the operation result at intervals as recommended by the API
+                 service.
+            operationId: Operations_GetOperation
+            parameters:
+                - name: operation
+                  in: path
+                  description: The operation id.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Operation'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - Operations
+            description: |-
+                Deletes a long-running operation. This method indicates that the client is
+                 no longer interested in the operation result. It does not cancel the
+                 operation. If the server doesn't support this method, it returns
+                 `google.rpc.Code.UNIMPLEMENTED`.
+            operationId: Operations_DeleteOperation
+            parameters:
+                - name: operation
+                  in: path
+                  description: The operation id.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /v1/operations/{operation}:cancel:
+        post:
+            tags:
+                - Operations
+            description: |-
+                Starts asynchronous cancellation on a long-running operation.  The server
+                 makes a best effort to cancel the operation, but success is not
+                 guaranteed.  If the server doesn't support this method, it returns
+                 `google.rpc.Code.UNIMPLEMENTED`.  Clients can use
+                 [Operations.GetOperation][google.longrunning.Operations.GetOperation] or
+                 other methods to check whether the cancellation succeeded or whether the
+                 operation completed despite cancellation. On successful cancellation,
+                 the operation is not deleted; instead, it becomes an operation with
+                 an [Operation.error][google.longrunning.Operation.error] value with a [google.rpc.Status.code][google.rpc.Status.code] of 1,
+                 corresponding to `Code.CANCELLED`.
+            operationId: Operations_CancelOperation
+            parameters:
+                - name: operation
+                  in: path
+                  description: The operation id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CancelOperationRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+components:
+    schemas:
+        CancelOperationRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                    description: The name of the operation resource to be cancelled.
+            description: The request message for [Operations.CancelOperation][google.longrunning.Operations.CancelOperation].
+        GoogleProtobufAny:
+            type: object
+            properties:
+                '@type':
+                    type: string
+                    description: The type of the serialized message.
+            additionalProperties: true
+            description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+        ListOperationsResponse:
+            type: object
+            properties:
+                operations:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Operation'
+                    description: A list of operations that matches the specified filter in the request.
+                nextPageToken:
+                    type: string
+                    description: The standard List next-page token.
+            description: The response message for [Operations.ListOperations][google.longrunning.Operations.ListOperations].
+        Operation:
+            type: object
+            properties:
+                name:
+                    type: string
+                    description: |-
+                        The server-assigned name, which is only unique within the same service that
+                         originally returns it. If you use the default HTTP mapping, the
+                         `name` should be a resource name ending with `operations/{unique_id}`.
+                metadata:
+                    allOf:
+                        - $ref: '#/components/schemas/GoogleProtobufAny'
+                    description: |-
+                        Service-specific metadata associated with the operation.  It typically
+                         contains progress information and common metadata such as create time.
+                         Some services might not provide such metadata.  Any method that returns a
+                         long-running operation should document the metadata type, if any.
+                done:
+                    type: boolean
+                    description: |-
+                        If the value is `false`, it means the operation is still in progress.
+                         If `true`, the operation is completed, and either `error` or `response` is
+                         available.
+                error:
+                    allOf:
+                        - $ref: '#/components/schemas/Status'
+                    description: The error result of the operation in case of failure or cancellation.
+                response:
+                    allOf:
+                        - $ref: '#/components/schemas/GoogleProtobufAny'
+                    description: |-
+                        The normal response of the operation in case of success.  If the original
+                         method returns no data on success, such as `Delete`, the response is
+                         `google.protobuf.Empty`.  If the original method is standard
+                         `Get`/`Create`/`Update`, the response should be the resource.  For other
+                         methods, the response should have the type `XxxResponse`, where `Xxx`
+                         is the original method name.  For example, if the original method name
+                         is `TakeSnapshot()`, the inferred response type is
+                         `TakeSnapshotResponse`.
+            description: |-
+                This resource represents a long-running operation that is the result of a
+                 network API call.
+        Status:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+                    format: int32
+                message:
+                    type: string
+                    description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+                details:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/GoogleProtobufAny'
+                    description: A list of messages that carry the error details.  There is a common set of message types for APIs to use.
+            description: 'The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).'
+tags:
+    - name: Operations

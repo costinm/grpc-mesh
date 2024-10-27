@@ -15,7 +15,9 @@
 syntax = "proto3";
 
 package istio.workload;
-option go_package="pkg/workloadapi";
+option go_package="github.com/costinm/grpc-mesh/gen/proto/go/istio/workload";
+
+// This is in pkg/workload and ztunnel - seems the pkg one is the real one.
 
 // Address represents a unique address.
 //

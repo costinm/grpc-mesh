@@ -21,9 +21,9 @@
 package privateca
 
 import (
-	duration "github.com/golang/protobuf/ptypes/duration"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -352,7 +352,7 @@ type Certificate struct {
 	// "not_before_time" and "not_after_time" fields inside an X.509
 	// certificate. Note that the lifetime may be truncated if it would extend
 	// past the life of any certificate authority in the issuing chain.
-	Lifetime *duration.Duration `protobuf:"bytes,5,opt,name=lifetime,proto3" json:"lifetime,omitempty"`
+	Lifetime *durationpb.Duration `protobuf:"bytes,5,opt,name=lifetime,proto3" json:"lifetime,omitempty"`
 	// Immutable. The resource name for a [CertificateTemplate][google.cloud.security.privateca.v1.CertificateTemplate] used to issue this
 	// certificate, in the format
 	// `projects/*/locations/*/certificateTemplates/*`.
@@ -448,7 +448,7 @@ func (x *Certificate) GetIssuerCertificateAuthority() string {
 	return ""
 }
 
-func (x *Certificate) GetLifetime() *duration.Duration {
+func (x *Certificate) GetLifetime() *durationpb.Duration {
 	if x != nil {
 		return x.Lifetime
 	}
@@ -1731,7 +1731,7 @@ type CertificateDescription_SubjectDescription struct {
 	// The serial number encoded in lowercase hexadecimal.
 	HexSerialNumber string `protobuf:"bytes,3,opt,name=hex_serial_number,json=hexSerialNumber,proto3" json:"hex_serial_number,omitempty"`
 	// For convenience, the actual lifetime of an issued certificate.
-	Lifetime *duration.Duration `protobuf:"bytes,4,opt,name=lifetime,proto3" json:"lifetime,omitempty"`
+	Lifetime *durationpb.Duration `protobuf:"bytes,4,opt,name=lifetime,proto3" json:"lifetime,omitempty"`
 	// The time at which the certificate becomes valid.
 	NotBeforeTime *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=not_before_time,json=notBeforeTime,proto3" json:"not_before_time,omitempty"`
 	// The time after which the certificate is expired.
@@ -1794,7 +1794,7 @@ func (x *CertificateDescription_SubjectDescription) GetHexSerialNumber() string 
 	return ""
 }
 
-func (x *CertificateDescription_SubjectDescription) GetLifetime() *duration.Duration {
+func (x *CertificateDescription_SubjectDescription) GetLifetime() *durationpb.Duration {
 	if x != nil {
 		return x.Lifetime
 	}
@@ -2632,7 +2632,7 @@ var file_google_cloud_security_privateca_v1_resources_proto_goTypes = []interfac
 	(*CertificateDescription_CertificateFingerprint)(nil), // 24: google.cloud.security.privateca.v1.CertificateDescription.CertificateFingerprint
 	(*KeyUsage_KeyUsageOptions)(nil),                      // 25: google.cloud.security.privateca.v1.KeyUsage.KeyUsageOptions
 	(*KeyUsage_ExtendedKeyUsageOptions)(nil),              // 26: google.cloud.security.privateca.v1.KeyUsage.ExtendedKeyUsageOptions
-	(*duration.Duration)(nil),                             // 27: google.protobuf.Duration
+	(*durationpb.Duration)(nil),                           // 27: google.protobuf.Duration
 	(*timestamppb.Timestamp)(nil),                         // 28: google.protobuf.Timestamp
 }
 var file_google_cloud_security_privateca_v1_resources_proto_depIdxs = []int32{

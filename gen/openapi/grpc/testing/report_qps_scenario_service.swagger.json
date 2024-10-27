@@ -1,0 +1,673 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "grpc/testing/report_qps_scenario_service.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "ReportQpsScenarioService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "coreStats": {
+      "type": "object",
+      "properties": {
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/grpccoreMetric"
+          }
+        }
+      }
+    },
+    "googleprotobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com. As of May 2023, there are no widely used type server\nimplementations and no plans to implement one.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        }
+      },
+      "additionalProperties": {},
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n    // or ...\n    if (any.isSameTypeAs(Foo.getDefaultInstance())) {\n      foo = any.unpack(Foo.getDefaultInstance());\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := \u0026pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "googlerpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code]."
+        },
+        "message": {
+          "type": "string",
+          "description": "A developer-facing error message, which should be in English. Any\nuser-facing error message should be localized and sent in the\n[google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client."
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/googleprotobufAny"
+          },
+          "description": "A list of messages that carry the error details.  There is a common set of\nmessage types for APIs to use."
+        }
+      },
+      "description": "The `Status` type defines a logical error model that is suitable for\ndifferent programming environments, including REST APIs and RPC APIs. It is\nused by [gRPC](https://github.com/grpc). Each `Status` message contains\nthree pieces of data: error code, error message, and error details.\n\nYou can find out more about this error model and how to work with it in the\n[API Design Guide](https://cloud.google.com/apis/design/errors)."
+    },
+    "grpccoreBucket": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "number",
+          "format": "double"
+        },
+        "count": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "grpccoreHistogram": {
+      "type": "object",
+      "properties": {
+        "buckets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/grpccoreBucket"
+          }
+        }
+      }
+    },
+    "grpccoreMetric": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "count": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "histogram": {
+          "$ref": "#/definitions/grpccoreHistogram"
+        }
+      }
+    },
+    "grpctestingRpcType": {
+      "type": "string",
+      "enum": [
+        "UNARY",
+        "STREAMING",
+        "STREAMING_FROM_CLIENT",
+        "STREAMING_FROM_SERVER",
+        "STREAMING_BOTH_WAYS"
+      ],
+      "default": "UNARY"
+    },
+    "testingByteBufferParams": {
+      "type": "object",
+      "properties": {
+        "reqSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "respSize": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "testingChannelArg": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "strValue": {
+          "type": "string"
+        },
+        "intValue": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "testingClientConfig": {
+      "type": "object",
+      "properties": {
+        "serverTargets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of targets to connect to. At least one target needs to be specified."
+        },
+        "clientType": {
+          "$ref": "#/definitions/testingClientType"
+        },
+        "securityParams": {
+          "$ref": "#/definitions/testingSecurityParams"
+        },
+        "outstandingRpcsPerChannel": {
+          "type": "integer",
+          "format": "int32",
+          "description": "How many concurrent RPCs to start for each channel.\nFor synchronous client, use a separate thread for each outstanding RPC."
+        },
+        "clientChannels": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of independent client channels to create.\ni-th channel will connect to server_target[i % server_targets.size()]"
+        },
+        "asyncClientThreads": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Only for async client. Number of threads to use to start/manage RPCs."
+        },
+        "rpcType": {
+          "$ref": "#/definitions/grpctestingRpcType"
+        },
+        "loadParams": {
+          "$ref": "#/definitions/testingLoadParams",
+          "description": "The requested load for the entire client (aggregated over all the threads)."
+        },
+        "payloadConfig": {
+          "$ref": "#/definitions/testingPayloadConfig"
+        },
+        "histogramParams": {
+          "$ref": "#/definitions/testingHistogramParams"
+        },
+        "coreList": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": "Specify the cores we should run the client on, if desired"
+        },
+        "coreLimit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "otherClientApi": {
+          "type": "string",
+          "title": "If we use an OTHER_CLIENT client_type, this string gives more detail"
+        },
+        "channelArgs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/testingChannelArg"
+          }
+        },
+        "threadsPerCq": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of threads that share each completion queue"
+        },
+        "messagesPerStream": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of messages on a stream before it gets finished/restarted"
+        },
+        "useCoalesceApi": {
+          "type": "boolean",
+          "description": "Use coalescing API when possible."
+        },
+        "medianLatencyCollectionIntervalMillis": {
+          "type": "integer",
+          "format": "int32",
+          "description": "If 0, disabled. Else, specifies the period between gathering latency\nmedians in milliseconds."
+        },
+        "clientProcesses": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of client processes. 0 indicates no restriction."
+        }
+      }
+    },
+    "testingClientStats": {
+      "type": "object",
+      "properties": {
+        "latencies": {
+          "$ref": "#/definitions/testingHistogramData",
+          "description": "Latency histogram. Data points are in nanoseconds."
+        },
+        "timeElapsed": {
+          "type": "number",
+          "format": "double",
+          "description": "See ServerStats for details."
+        },
+        "timeUser": {
+          "type": "number",
+          "format": "double"
+        },
+        "timeSystem": {
+          "type": "number",
+          "format": "double"
+        },
+        "requestResults": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/testingRequestResultCount"
+          },
+          "title": "Number of failed requests (one row per status code seen)"
+        },
+        "cqPollCount": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Number of polls called inside completion queue"
+        },
+        "coreStats": {
+          "$ref": "#/definitions/coreStats",
+          "title": "Core library stats"
+        }
+      }
+    },
+    "testingClientType": {
+      "type": "string",
+      "enum": [
+        "SYNC_CLIENT",
+        "ASYNC_CLIENT",
+        "OTHER_CLIENT",
+        "CALLBACK_CLIENT"
+      ],
+      "default": "SYNC_CLIENT",
+      "title": "- SYNC_CLIENT: Many languages support a basic distinction between using\nsync or async client, and this allows the specification\n - OTHER_CLIENT: used for some language-specific variants"
+    },
+    "testingClosedLoopParams": {
+      "type": "object",
+      "description": "Once an RPC finishes, immediately start a new one.\nNo configuration parameters needed."
+    },
+    "testingComplexProtoParams": {
+      "type": "object",
+      "title": "TODO (vpai): Fill this in once the details of complex, representative\n              protos are decided"
+    },
+    "testingHistogramData": {
+      "type": "object",
+      "properties": {
+        "bucket": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "minSeen": {
+          "type": "number",
+          "format": "double"
+        },
+        "maxSeen": {
+          "type": "number",
+          "format": "double"
+        },
+        "sum": {
+          "type": "number",
+          "format": "double"
+        },
+        "sumOfSquares": {
+          "type": "number",
+          "format": "double"
+        },
+        "count": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "title": "Histogram data based on grpc/support/histogram.c"
+    },
+    "testingHistogramParams": {
+      "type": "object",
+      "properties": {
+        "resolution": {
+          "type": "number",
+          "format": "double",
+          "title": "first bucket is [0, 1 + resolution)"
+        },
+        "maxPossible": {
+          "type": "number",
+          "format": "double",
+          "title": "use enough buckets to allow this value"
+        }
+      },
+      "title": "Histogram params based on grpc/support/histogram.c"
+    },
+    "testingLoadParams": {
+      "type": "object",
+      "properties": {
+        "closedLoop": {
+          "$ref": "#/definitions/testingClosedLoopParams"
+        },
+        "poisson": {
+          "$ref": "#/definitions/testingPoissonParams"
+        }
+      }
+    },
+    "testingPayloadConfig": {
+      "type": "object",
+      "properties": {
+        "bytebufParams": {
+          "$ref": "#/definitions/testingByteBufferParams"
+        },
+        "simpleParams": {
+          "$ref": "#/definitions/testingSimpleProtoParams"
+        },
+        "complexParams": {
+          "$ref": "#/definitions/testingComplexProtoParams"
+        }
+      }
+    },
+    "testingPoissonParams": {
+      "type": "object",
+      "properties": {
+        "offeredLoad": {
+          "type": "number",
+          "format": "double",
+          "description": "The rate of arrivals (a.k.a. lambda parameter of the exp distribution)."
+        }
+      },
+      "description": "Parameters of poisson process distribution, which is a good representation\nof activity coming in from independent identical stationary sources."
+    },
+    "testingRequestResultCount": {
+      "type": "object",
+      "properties": {
+        "statusCode": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "count": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "testingScenario": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Human readable name for this scenario"
+        },
+        "clientConfig": {
+          "$ref": "#/definitions/testingClientConfig",
+          "title": "Client configuration"
+        },
+        "numClients": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of clients to start for the test"
+        },
+        "serverConfig": {
+          "$ref": "#/definitions/testingServerConfig",
+          "title": "Server configuration"
+        },
+        "numServers": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of servers to start for the test"
+        },
+        "warmupSeconds": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Warmup period, in seconds"
+        },
+        "benchmarkSeconds": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Benchmark time, in seconds"
+        },
+        "spawnLocalWorkerCount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of workers to spawn locally (usually zero)"
+        }
+      },
+      "title": "A single performance scenario: input to qps_json_driver"
+    },
+    "testingScenarioResultSummary": {
+      "type": "object",
+      "properties": {
+        "qps": {
+          "type": "number",
+          "format": "double",
+          "description": "Total number of operations per second over all clients. What is counted as 1 'operation' depends on the benchmark scenarios:\nFor unary benchmarks, an operation is processing of a single unary RPC. \nFor streaming benchmarks, an operation is processing of a single ping pong of request and response."
+        },
+        "qpsPerServerCore": {
+          "type": "number",
+          "format": "double",
+          "description": "QPS per server core."
+        },
+        "serverSystemTime": {
+          "type": "number",
+          "format": "double",
+          "description": "The total server cpu load based on system time across all server processes, expressed as percentage of a single cpu core.\nFor example, 85 implies 85% of a cpu core, 125 implies 125% of a cpu core. Since we are accumulating the cpu load across all the server \nprocesses, the value could \u003e 100 when there are multiple servers or a single server using multiple threads and cores. \nSame explanation for the total client cpu load below."
+        },
+        "serverUserTime": {
+          "type": "number",
+          "format": "double",
+          "title": "The total server cpu load based on user time across all server processes, expressed as percentage of a single cpu core. (85 =\u003e 85%, 125 =\u003e 125%)"
+        },
+        "clientSystemTime": {
+          "type": "number",
+          "format": "double",
+          "title": "The total client cpu load based on system time across all client processes, expressed as percentage of a single cpu core. (85 =\u003e 85%, 125 =\u003e 125%)"
+        },
+        "clientUserTime": {
+          "type": "number",
+          "format": "double",
+          "title": "The total client cpu load based on user time across all client processes, expressed as percentage of a single cpu core. (85 =\u003e 85%, 125 =\u003e 125%)"
+        },
+        "latency50": {
+          "type": "number",
+          "format": "double",
+          "title": "X% latency percentiles (in nanoseconds)"
+        },
+        "latency90": {
+          "type": "number",
+          "format": "double"
+        },
+        "latency95": {
+          "type": "number",
+          "format": "double"
+        },
+        "latency99": {
+          "type": "number",
+          "format": "double"
+        },
+        "latency999": {
+          "type": "number",
+          "format": "double"
+        },
+        "serverCpuUsage": {
+          "type": "number",
+          "format": "double",
+          "title": "server cpu usage percentage"
+        },
+        "successfulRequestsPerSecond": {
+          "type": "number",
+          "format": "double",
+          "title": "Number of requests that succeeded/failed"
+        },
+        "failedRequestsPerSecond": {
+          "type": "number",
+          "format": "double"
+        },
+        "clientPollsPerRequest": {
+          "type": "number",
+          "format": "double",
+          "title": "Number of polls called inside completion queue per request"
+        },
+        "serverPollsPerRequest": {
+          "type": "number",
+          "format": "double"
+        },
+        "serverQueriesPerCpuSec": {
+          "type": "number",
+          "format": "double",
+          "title": "Queries per CPU-sec over all servers or clients"
+        },
+        "clientQueriesPerCpuSec": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "description": "Basic summary that can be computed from ClientStats and ServerStats\nonce the scenario has finished."
+    },
+    "testingSecurityParams": {
+      "type": "object",
+      "properties": {
+        "useTestCa": {
+          "type": "boolean"
+        },
+        "serverHostOverride": {
+          "type": "string"
+        },
+        "credType": {
+          "type": "string"
+        }
+      },
+      "title": "presence of SecurityParams implies use of TLS"
+    },
+    "testingServerConfig": {
+      "type": "object",
+      "properties": {
+        "serverType": {
+          "$ref": "#/definitions/testingServerType"
+        },
+        "securityParams": {
+          "$ref": "#/definitions/testingSecurityParams"
+        },
+        "port": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Port on which to listen. Zero means pick unused port."
+        },
+        "asyncServerThreads": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Only for async server. Number of threads used to serve the requests."
+        },
+        "coreLimit": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Specify the number of cores to limit server to, if desired"
+        },
+        "payloadConfig": {
+          "$ref": "#/definitions/testingPayloadConfig",
+          "description": "payload config, used in generic server.\nNote this must NOT be used in proto (non-generic) servers. For proto servers,\n'response sizes' must be configured from the 'response_size' field of the\n'SimpleRequest' objects in RPC requests."
+        },
+        "coreList": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": "Specify the cores we should run the server on, if desired"
+        },
+        "otherServerApi": {
+          "type": "string",
+          "title": "If we use an OTHER_SERVER client_type, this string gives more detail"
+        },
+        "threadsPerCq": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of threads that share each completion queue"
+        },
+        "resourceQuotaSize": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Buffer pool size (no buffer pool specified if unset)"
+        },
+        "channelArgs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/testingChannelArg"
+          }
+        },
+        "serverProcesses": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of server processes. 0 indicates no restriction."
+        }
+      }
+    },
+    "testingServerStats": {
+      "type": "object",
+      "properties": {
+        "timeElapsed": {
+          "type": "number",
+          "format": "double",
+          "title": "wall clock time change in seconds since last reset"
+        },
+        "timeUser": {
+          "type": "number",
+          "format": "double",
+          "title": "change in user time (in seconds) used by the server since last reset"
+        },
+        "timeSystem": {
+          "type": "number",
+          "format": "double",
+          "title": "change in server time (in seconds) used by the server process and all\nthreads since last reset"
+        },
+        "totalCpuTime": {
+          "type": "string",
+          "format": "uint64",
+          "title": "change in total cpu time of the server (data from proc/stat)"
+        },
+        "idleCpuTime": {
+          "type": "string",
+          "format": "uint64",
+          "title": "change in idle time of the server (data from proc/stat)"
+        },
+        "cqPollCount": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Number of polls called inside completion queue"
+        },
+        "coreStats": {
+          "$ref": "#/definitions/coreStats",
+          "title": "Core library stats"
+        }
+      }
+    },
+    "testingServerType": {
+      "type": "string",
+      "enum": [
+        "SYNC_SERVER",
+        "ASYNC_SERVER",
+        "ASYNC_GENERIC_SERVER",
+        "OTHER_SERVER",
+        "CALLBACK_SERVER"
+      ],
+      "default": "SYNC_SERVER",
+      "title": "- OTHER_SERVER: used for some language-specific variants"
+    },
+    "testingSimpleProtoParams": {
+      "type": "object",
+      "properties": {
+        "reqSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "respSize": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "testingVoid": {
+      "type": "object"
+    }
+  }
+}

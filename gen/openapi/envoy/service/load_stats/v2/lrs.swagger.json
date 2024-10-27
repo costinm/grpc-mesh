@@ -1,0 +1,422 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "envoy/service/load_stats/v2/lrs.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "LoadReportingService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "ClusterStatsDroppedRequests": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "Identifier for the policy specifying the drop."
+        },
+        "droppedCount": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Total number of deliberately dropped requests for the category."
+        }
+      }
+    },
+    "googleprotobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com. As of May 2023, there are no widely used type server\nimplementations and no plans to implement one.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        }
+      },
+      "additionalProperties": {},
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n    // or ...\n    if (any.isSameTypeAs(Foo.getDefaultInstance())) {\n      foo = any.unpack(Foo.getDefaultInstance());\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := \u0026pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "googleprotobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+    },
+    "googlerpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code]."
+        },
+        "message": {
+          "type": "string",
+          "description": "A developer-facing error message, which should be in English. Any\nuser-facing error message should be localized and sent in the\n[google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client."
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/googleprotobufAny"
+          },
+          "description": "A list of messages that carry the error details.  There is a common set of\nmessage types for APIs to use."
+        }
+      },
+      "description": "The `Status` type defines a logical error model that is suitable for\ndifferent programming environments, including REST APIs and RPC APIs. It is\nused by [gRPC](https://github.com/grpc). Each `Status` message contains\nthree pieces of data: error code, error message, and error details.\n\nYou can find out more about this error model and how to work with it in the\n[API Design Guide](https://cloud.google.com/apis/design/errors)."
+    },
+    "v2ClusterStats": {
+      "type": "object",
+      "properties": {
+        "clusterName": {
+          "type": "string",
+          "description": "The name of the cluster."
+        },
+        "clusterServiceName": {
+          "type": "string",
+          "description": "The eds_cluster_config service_name of the cluster.\nIt's possible that two clusters send the same service_name to EDS,\nin that case, the management server is supposed to do aggregation on the load reports."
+        },
+        "upstreamLocalityStats": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v2UpstreamLocalityStats"
+          },
+          "description": "Need at least one."
+        },
+        "totalDroppedRequests": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Cluster-level stats such as total_successful_requests may be computed by\nsumming upstream_locality_stats. In addition, below there are additional\ncluster-wide stats.\n\nThe total number of dropped requests. This covers requests\ndeliberately dropped by the drop_overload policy and circuit breaking."
+        },
+        "droppedRequests": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/ClusterStatsDroppedRequests"
+          },
+          "description": "Information about deliberately dropped requests for each category specified\nin the DropOverload policy."
+        },
+        "loadReportInterval": {
+          "type": "string",
+          "description": "Period over which the actual load report occurred. This will be guaranteed to include every\nrequest reported. Due to system load and delays between the ``LoadStatsRequest`` sent from Envoy\nand the ``LoadStatsResponse`` message sent from the management server, this may be longer than\nthe requested load reporting interval in the ``LoadStatsResponse``."
+        }
+      },
+      "title": "Per cluster load stats. Envoy reports these stats a management server in a\n:ref:`LoadStatsRequest\u003cenvoy_v3_api_msg_service.load_stats.v3.LoadStatsRequest\u003e`\nNext ID: 7\n[#next-free-field: 7]"
+    },
+    "v2EndpointLoadMetricStats": {
+      "type": "object",
+      "properties": {
+        "metricName": {
+          "type": "string",
+          "description": "Name of the metric; may be empty."
+        },
+        "numRequestsFinishedWithMetric": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Number of calls that finished and included this metric."
+        },
+        "totalMetricValue": {
+          "type": "number",
+          "format": "double",
+          "description": "Sum of metric values across all calls that finished with this metric for\nload_reporting_interval."
+        }
+      }
+    },
+    "v2LoadStatsResponse": {
+      "type": "object",
+      "properties": {
+        "clusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Clusters to report stats for.\nNot populated if *send_all_clusters* is true."
+        },
+        "sendAllClusters": {
+          "type": "boolean",
+          "description": "If true, the client should send all clusters it knows about.\nOnly clients that advertise the \"envoy.lrs.supports_send_all_clusters\" capability in their\n:ref:`client_features\u003cenvoy_api_field_core.Node.client_features\u003e` field will honor this field."
+        },
+        "loadReportingInterval": {
+          "type": "string",
+          "description": "The minimum interval of time to collect stats over. This is only a minimum for two reasons:\n1. There may be some delay from when the timer fires until stats sampling occurs.\n2. For clusters that were already feature in the previous *LoadStatsResponse*, any traffic\n   that is observed in between the corresponding previous *LoadStatsRequest* and this\n   *LoadStatsResponse* will also be accumulated and billed to the cluster. This avoids a period\n   of inobservability that might otherwise exists between the messages. New clusters are not\n   subject to this consideration."
+        },
+        "reportEndpointGranularity": {
+          "type": "boolean",
+          "description": "Set to *true* if the management server supports endpoint granularity\nreport."
+        }
+      },
+      "description": "The management server sends envoy a LoadStatsResponse with all clusters it\nis interested in learning load stats about.\n[#not-implemented-hide:] Not configuration. TBD how to doc proto APIs."
+    },
+    "v2UpstreamEndpointStats": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "$ref": "#/definitions/xdsAddress",
+          "description": "Upstream host address."
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Opaque and implementation dependent metadata of the\nendpoint. Envoy will pass this directly to the management server."
+        },
+        "totalSuccessfulRequests": {
+          "type": "string",
+          "format": "uint64",
+          "description": "The total number of requests successfully completed by the endpoints in the\nlocality. These include non-5xx responses for HTTP, where errors\noriginate at the client and the endpoint responded successfully. For gRPC,\nthe grpc-status values are those not covered by total_error_requests below."
+        },
+        "totalRequestsInProgress": {
+          "type": "string",
+          "format": "uint64",
+          "description": "The total number of unfinished requests for this endpoint."
+        },
+        "totalErrorRequests": {
+          "type": "string",
+          "format": "uint64",
+          "description": "- DeadlineExceeded\n  - Unimplemented\n  - Internal\n  - Unavailable\n  - Unknown\n  - DataLoss",
+          "title": "The total number of requests that failed due to errors at the endpoint.\nFor HTTP these are responses with 5xx status codes and for gRPC the\ngrpc-status values:"
+        },
+        "totalIssuedRequests": {
+          "type": "string",
+          "format": "uint64",
+          "description": "The total number of requests that were issued to this endpoint\nsince the last report. A single TCP connection, HTTP or gRPC\nrequest or stream is counted as one request."
+        },
+        "loadMetricStats": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v2EndpointLoadMetricStats"
+          },
+          "description": "Stats for multi-dimensional load balancing."
+        }
+      },
+      "title": "[#next-free-field: 8]"
+    },
+    "v2UpstreamLocalityStats": {
+      "type": "object",
+      "properties": {
+        "locality": {
+          "$ref": "#/definitions/xdsLocality",
+          "description": "Name of zone, region and optionally endpoint group these metrics were\ncollected from. Zone and region names could be empty if unknown."
+        },
+        "totalSuccessfulRequests": {
+          "type": "string",
+          "format": "uint64",
+          "description": "The total number of requests successfully completed by the endpoints in the\nlocality."
+        },
+        "totalRequestsInProgress": {
+          "type": "string",
+          "format": "uint64",
+          "title": "The total number of unfinished requests"
+        },
+        "totalErrorRequests": {
+          "type": "string",
+          "format": "uint64",
+          "description": "The total number of requests that failed due to errors at the endpoint,\naggregated over all endpoints in the locality."
+        },
+        "totalIssuedRequests": {
+          "type": "string",
+          "format": "uint64",
+          "description": "The total number of requests that were issued by this Envoy since\nthe last report. This information is aggregated over all the\nupstream endpoints in the locality."
+        },
+        "loadMetricStats": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v2EndpointLoadMetricStats"
+          },
+          "description": "Stats for multi-dimensional load balancing."
+        },
+        "upstreamEndpointStats": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v2UpstreamEndpointStats"
+          },
+          "description": "Endpoint granularity stats information for this locality. This information\nis populated if the Server requests it by setting\n:ref:`LoadStatsResponse.report_endpoint_granularity\u003cenvoy_v3_api_field_service.load_stats.v3.LoadStatsResponse.report_endpoint_granularity\u003e`."
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int64",
+          "description": "[#not-implemented-hide:] The priority of the endpoint group these metrics\nwere collected from."
+        }
+      },
+      "title": "These are stats Envoy reports to the management server at a frequency defined by\n:ref:`LoadStatsResponse.load_reporting_interval\u003cenvoy_v3_api_field_service.load_stats.v3.LoadStatsResponse.load_reporting_interval\u003e`.\nStats per upstream region/zone and optionally per subzone.\n[#next-free-field: 9]"
+    },
+    "xdsAddress": {
+      "type": "object",
+      "properties": {
+        "socketAddress": {
+          "$ref": "#/definitions/xdsSocketAddress"
+        },
+        "pipe": {
+          "$ref": "#/definitions/xdsPipe"
+        }
+      },
+      "description": "Addresses specify either a logical or physical address and port, which are\nused to tell Envoy where to bind/listen, connect to upstream and find\nmanagement servers."
+    },
+    "xdsListValue": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/xdsValue"
+          },
+          "description": "Repeated field of dynamically typed values."
+        }
+      },
+      "description": "`ListValue` is a wrapper around a repeated field of values.\n\nThe JSON representation for `ListValue` is JSON array."
+    },
+    "xdsLocality": {
+      "type": "object",
+      "properties": {
+        "region": {
+          "type": "string",
+          "description": "Region this :ref:`zone \u003cenvoy_api_field_core.Locality.zone\u003e` belongs to."
+        },
+        "zone": {
+          "type": "string",
+          "description": "Defines the local service zone where Envoy is running. Though optional, it\nshould be set if discovery service routing is used and the discovery\nservice exposes :ref:`zone data \u003cconfig_cluster_manager_sds_api_host_az\u003e`,\neither in this message or via :option:`--service-zone`. The meaning of zone\nis context dependent, e.g. `Availability Zone (AZ)\n\u003chttps://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html\u003e`_\non AWS, `Zone \u003chttps://cloud.google.com/compute/docs/regions-zones/\u003e`_ on\nGCP, etc."
+        },
+        "subZone": {
+          "type": "string",
+          "description": "When used for locality of upstream hosts, this field further splits zone\ninto smaller chunks of sub-zones so they can be load balanced\nindependently."
+        }
+      },
+      "description": "Identifies location of where either Envoy runs or where upstream hosts run."
+    },
+    "xdsNode": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "An opaque node identifier for the Envoy node. This also provides the local\nservice node name. It should be set if any of the following features are\nused: :ref:`statsd \u003carch_overview_statistics\u003e`, :ref:`CDS\n\u003cconfig_cluster_manager_cds\u003e`, and :ref:`HTTP tracing\n\u003carch_overview_tracing\u003e`, either in this message or via\n:option:`--service-node`."
+        },
+        "cluster": {
+          "type": "string",
+          "description": "Defines the local service cluster name where Envoy is running. Though\noptional, it should be set if any of the following features are used:\n:ref:`statsd \u003carch_overview_statistics\u003e`, :ref:`health check cluster\nverification \u003cconfig_cluster_manager_cluster_hc_service_name\u003e`,\n:ref:`runtime override directory \u003cconfig_runtime_override_subdirectory\u003e`,\n:ref:`user agent addition \u003cconfig_http_conn_man_add_user_agent\u003e`,\n:ref:`HTTP global rate limiting \u003cconfig_http_filters_rate_limit\u003e`,\n:ref:`CDS \u003cconfig_cluster_manager_cds\u003e`, and :ref:`HTTP tracing\n\u003carch_overview_tracing\u003e`, either in this message or via\n:option:`--service-cluster`."
+        },
+        "metadata": {
+          "$ref": "#/definitions/xdsStruct",
+          "description": "Opaque metadata extending the node identifier. Envoy will pass this\ndirectly to the management server."
+        },
+        "locality": {
+          "$ref": "#/definitions/xdsLocality",
+          "description": "Locality specifying where the Envoy instance is running."
+        },
+        "buildVersion": {
+          "type": "string",
+          "description": "This is motivated by informing a management server during canary which\nversion of Envoy is being tested in a heterogeneous fleet. This will be set\nby Envoy in management server RPCs."
+        }
+      },
+      "description": "Identifies a specific Envoy instance. The node identifier is presented to the\nmanagement server, which may use this identifier to distinguish per Envoy\nconfiguration for serving."
+    },
+    "xdsNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+    },
+    "xdsPipe": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Unix Domain Socket path. On Linux, paths starting with '@' will use the\nabstract namespace. The starting '@' is replaced by a null byte by Envoy.\nPaths starting with '@' will result in an error in environments other than\nLinux."
+        }
+      }
+    },
+    "xdsSocketAddress": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/xdsSocketAddressProtocol"
+        },
+        "address": {
+          "type": "string",
+          "description": "The address for this socket. :ref:`Listeners \u003cconfig_listeners\u003e` will bind\nto the address or outbound connections will be made. An empty address is\nnot allowed, specify ``0.0.0.0`` or ``::`` to bind any. It's still possible to\ndistinguish on an address via the prefix/suffix matching in\nFilterChainMatch after connection. For :ref:`clusters\n\u003cconfig_cluster_manager_cluster\u003e`, an address may be either an IP or\nhostname to be resolved via DNS. If it is a hostname, :ref:`resolver_name\n\u003cenvoy_api_field_core.SocketAddress.resolver_name\u003e` should be set unless default\n(i.e. DNS) resolution is expected."
+        },
+        "portValue": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "namedPort": {
+          "type": "string",
+          "description": "This is only valid if :ref:`resolver_name\n\u003cenvoy_api_field_core.SocketAddress.resolver_name\u003e` is specified below and the\nnamed resolver is capable of named port resolution."
+        },
+        "resolverName": {
+          "type": "string",
+          "description": "The name of the resolver. This must have been registered with Envoy. If this is\nempty, a context dependent default applies. If address is a hostname this\nshould be set for resolution other than DNS. If the address is a concrete\nIP address, no resolution will occur."
+        },
+        "ipv4Compat": {
+          "type": "boolean",
+          "description": "When binding to an IPv6 address above, this enables `IPv4 compatibity\n\u003chttps://tools.ietf.org/html/rfc3493#page-11\u003e`_. Binding to ``::`` will\nallow both IPv4 and IPv6 connections, with peer IPv4 addresses mapped into\nIPv6 space as ``::FFFF:\u003cIPv4-address\u003e``."
+        }
+      }
+    },
+    "xdsSocketAddressProtocol": {
+      "type": "string",
+      "enum": [
+        "TCP",
+        "UDP"
+      ],
+      "default": "TCP",
+      "title": "- UDP: [#not-implemented-hide:]"
+    },
+    "xdsStruct": {
+      "type": "object",
+      "properties": {
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/xdsValue"
+          },
+          "description": "Unordered map of dynamically typed values."
+        }
+      },
+      "description": "`Struct` represents a structured data value, consisting of fields\nwhich map to dynamically typed values. In some languages, `Struct`\nmight be supported by a native representation. For example, in\nscripting languages like JS a struct is represented as an\nobject. The details of that representation are described together\nwith the proto support for the language.\n\nThe JSON representation for `Struct` is JSON object."
+    },
+    "xdsValue": {
+      "type": "object",
+      "properties": {
+        "nullValue": {
+          "$ref": "#/definitions/xdsNullValue",
+          "description": "Represents a null value."
+        },
+        "numberValue": {
+          "type": "number",
+          "format": "double",
+          "description": "Represents a double value."
+        },
+        "stringValue": {
+          "type": "string",
+          "description": "Represents a string value."
+        },
+        "boolValue": {
+          "type": "boolean",
+          "description": "Represents a boolean value."
+        },
+        "structValue": {
+          "$ref": "#/definitions/xdsStruct",
+          "description": "Represents a structured value."
+        },
+        "listValue": {
+          "$ref": "#/definitions/xdsListValue",
+          "description": "Represents a repeated `Value`."
+        }
+      },
+      "description": "`Value` represents a dynamically typed value which can be either\nnull, a number, a string, a boolean, a recursive struct value, or a\nlist of values. A producer of value is expected to set one of that\nvariants, absence of any variant indicates an error.\n\nThe JSON representation for `Value` is JSON value."
+    }
+  }
+}

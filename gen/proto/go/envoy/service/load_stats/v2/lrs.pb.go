@@ -7,11 +7,11 @@
 package v2
 
 import (
-	protobuf "github.com/costinm/grpc-mesh/gen/proto/go/google/protobuf"
 	xds "github.com/costinm/grpc-mesh/gen/proto/go/xds"
-	duration "github.com/golang/protobuf/ptypes/duration"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 	reflect "reflect"
 	sync "sync"
 )
@@ -104,7 +104,7 @@ type LoadStatsResponse struct {
 	//     *LoadStatsResponse* will also be accumulated and billed to the cluster. This avoids a period
 	//     of inobservability that might otherwise exists between the messages. New clusters are not
 	//     subject to this consideration.
-	LoadReportingInterval *duration.Duration `protobuf:"bytes,2,opt,name=load_reporting_interval,json=loadReportingInterval,proto3" json:"load_reporting_interval,omitempty"`
+	LoadReportingInterval *durationpb.Duration `protobuf:"bytes,2,opt,name=load_reporting_interval,json=loadReportingInterval,proto3" json:"load_reporting_interval,omitempty"`
 	// Set to *true* if the management server supports endpoint granularity
 	// report.
 	ReportEndpointGranularity bool `protobuf:"varint,3,opt,name=report_endpoint_granularity,json=reportEndpointGranularity,proto3" json:"report_endpoint_granularity,omitempty"`
@@ -156,7 +156,7 @@ func (x *LoadStatsResponse) GetSendAllClusters() bool {
 	return false
 }
 
-func (x *LoadStatsResponse) GetLoadReportingInterval() *duration.Duration {
+func (x *LoadStatsResponse) GetLoadReportingInterval() *durationpb.Duration {
 	if x != nil {
 		return x.LoadReportingInterval
 	}
@@ -303,7 +303,7 @@ type UpstreamEndpointStats struct {
 	Address *xds.Address `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	// Opaque and implementation dependent metadata of the
 	// endpoint. Envoy will pass this directly to the management server.
-	Metadata *protobuf.Struct `protobuf:"bytes,6,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata *structpb.Struct `protobuf:"bytes,6,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// The total number of requests successfully completed by the endpoints in the
 	// locality. These include non-5xx responses for HTTP, where errors
 	// originate at the client and the endpoint responded successfully. For gRPC,
@@ -369,7 +369,7 @@ func (x *UpstreamEndpointStats) GetAddress() *xds.Address {
 	return nil
 }
 
-func (x *UpstreamEndpointStats) GetMetadata() *protobuf.Struct {
+func (x *UpstreamEndpointStats) GetMetadata() *structpb.Struct {
 	if x != nil {
 		return x.Metadata
 	}
@@ -509,7 +509,7 @@ type ClusterStats struct {
 	// request reported. Due to system load and delays between the “LoadStatsRequest“ sent from Envoy
 	// and the “LoadStatsResponse“ message sent from the management server, this may be longer than
 	// the requested load reporting interval in the “LoadStatsResponse“.
-	LoadReportInterval *duration.Duration `protobuf:"bytes,4,opt,name=load_report_interval,json=loadReportInterval,proto3" json:"load_report_interval,omitempty"`
+	LoadReportInterval *durationpb.Duration `protobuf:"bytes,4,opt,name=load_report_interval,json=loadReportInterval,proto3" json:"load_report_interval,omitempty"`
 }
 
 func (x *ClusterStats) Reset() {
@@ -579,7 +579,7 @@ func (x *ClusterStats) GetDroppedRequests() []*ClusterStats_DroppedRequests {
 	return nil
 }
 
-func (x *ClusterStats) GetLoadReportInterval() *duration.Duration {
+func (x *ClusterStats) GetLoadReportInterval() *durationpb.Duration {
 	if x != nil {
 		return x.LoadReportInterval
 	}
@@ -828,10 +828,10 @@ var file_envoy_service_load_stats_v2_lrs_proto_goTypes = []interface{}{
 	(*ClusterStats)(nil),                 // 5: envoy.service.load_stats.v2.ClusterStats
 	(*ClusterStats_DroppedRequests)(nil), // 6: envoy.service.load_stats.v2.ClusterStats.DroppedRequests
 	(*xds.Node)(nil),                     // 7: xds.Node
-	(*duration.Duration)(nil),            // 8: google.protobuf.Duration
+	(*durationpb.Duration)(nil),          // 8: google.protobuf.Duration
 	(*xds.Locality)(nil),                 // 9: xds.Locality
 	(*xds.Address)(nil),                  // 10: xds.Address
-	(*protobuf.Struct)(nil),              // 11: google.protobuf.Struct
+	(*structpb.Struct)(nil),              // 11: google.protobuf.Struct
 }
 var file_envoy_service_load_stats_v2_lrs_proto_depIdxs = []int32{
 	7,  // 0: envoy.service.load_stats.v2.LoadStatsRequest.node:type_name -> xds.Node

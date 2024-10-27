@@ -21,9 +21,9 @@
 package v1
 
 import (
-	duration "github.com/golang/protobuf/ptypes/duration"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	reflect "reflect"
 	sync "sync"
 )
@@ -47,7 +47,7 @@ type MeshCertificateRequest struct {
 	// PEM-encoded certificate request.
 	Csr string `protobuf:"bytes,2,opt,name=csr,proto3" json:"csr,omitempty"`
 	// Optional: requested certificate validity period.
-	Validity *duration.Duration `protobuf:"bytes,3,opt,name=validity,proto3" json:"validity,omitempty"` // Reserved 4
+	Validity *durationpb.Duration `protobuf:"bytes,3,opt,name=validity,proto3" json:"validity,omitempty"` // Reserved 4
 }
 
 func (x *MeshCertificateRequest) Reset() {
@@ -96,7 +96,7 @@ func (x *MeshCertificateRequest) GetCsr() string {
 	return ""
 }
 
-func (x *MeshCertificateRequest) GetValidity() *duration.Duration {
+func (x *MeshCertificateRequest) GetValidity() *durationpb.Duration {
 	if x != nil {
 		return x.Validity
 	}
@@ -210,7 +210,7 @@ var file_google_security_meshca_v1_meshca_proto_msgTypes = make([]protoimpl.Mess
 var file_google_security_meshca_v1_meshca_proto_goTypes = []interface{}{
 	(*MeshCertificateRequest)(nil),  // 0: google.security.meshca.v1.MeshCertificateRequest
 	(*MeshCertificateResponse)(nil), // 1: google.security.meshca.v1.MeshCertificateResponse
-	(*duration.Duration)(nil),       // 2: google.protobuf.Duration
+	(*durationpb.Duration)(nil),     // 2: google.protobuf.Duration
 }
 var file_google_security_meshca_v1_meshca_proto_depIdxs = []int32{
 	2, // 0: google.security.meshca.v1.MeshCertificateRequest.validity:type_name -> google.protobuf.Duration

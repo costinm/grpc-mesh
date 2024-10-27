@@ -10,20 +10,20 @@ plugins:
 #    out: ../gen/proto/go
 #    opt: paths=source_relative
 
-  - remote: buf.build/protocolbuffers/go:v1.31.0
-  #- name: go
-    out: ../gen/grpc/go
-    opt:
-      - paths=source_relative
+#  - remote: buf.build/protocolbuffers/go:v1.31.0
+#  #- name: go
+#    out: ../gen/grpc/go
+#    opt:
+#      - paths=source_relative
 
   - remote: buf.build/grpc-ecosystem/openapiv2:v2.20.0
     out: ../gen/openapi
 
-  - remote: buf.build/grpc/go
-    out: ../gen/grpc/go
-    opt:
-      - paths=source_relative
-      - require_unimplemented_servers=false
+#  - remote: buf.build/grpc/go
+#    out: ../gen/grpc/go
+#    opt:
+#      - paths=source_relative
+#      - require_unimplemented_servers=false
 
   - remote: buf.build/community/google-gnostic-openapi:v0.7.0
     out: ../gen/gnostic

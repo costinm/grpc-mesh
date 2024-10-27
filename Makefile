@@ -10,11 +10,10 @@ proto-gen: PATH:=${HOME}/go/bin:${PATH}
 proto-gen:
 	rm -rf gen/proto/go
 	rm -rf gen/connect/go
-	rm -rf gen/grpc/go
 	(cd proto && buf generate)
 	(cd gen/proto && go mod tidy)
 	(cd gen/connect && go mod tidy)
-	(cd gen/grpc && go mod tidy)
+	#(cd gen/grpc && go mod tidy)
 
 
 deps:

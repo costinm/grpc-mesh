@@ -28,10 +28,10 @@
 package grpc_channelz_v1
 
 import (
-	any1 "github.com/golang/protobuf/ptypes/any"
-	duration "github.com/golang/protobuf/ptypes/duration"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	anypb "google.golang.org/protobuf/types/known/anypb"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 	reflect "reflect"
@@ -1520,7 +1520,7 @@ type SocketOption struct {
 	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	// Additional data associated with the socket option.  At least one of value
 	// or additional will be set.
-	Additional *any1.Any `protobuf:"bytes,3,opt,name=additional,proto3" json:"additional,omitempty"`
+	Additional *anypb.Any `protobuf:"bytes,3,opt,name=additional,proto3" json:"additional,omitempty"`
 }
 
 func (x *SocketOption) Reset() {
@@ -1569,7 +1569,7 @@ func (x *SocketOption) GetValue() string {
 	return ""
 }
 
-func (x *SocketOption) GetAdditional() *any1.Any {
+func (x *SocketOption) GetAdditional() *anypb.Any {
 	if x != nil {
 		return x.Additional
 	}
@@ -1583,7 +1583,7 @@ type SocketOptionTimeout struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Duration *duration.Duration `protobuf:"bytes,1,opt,name=duration,proto3" json:"duration,omitempty"`
+	Duration *durationpb.Duration `protobuf:"bytes,1,opt,name=duration,proto3" json:"duration,omitempty"`
 }
 
 func (x *SocketOptionTimeout) Reset() {
@@ -1618,7 +1618,7 @@ func (*SocketOptionTimeout) Descriptor() ([]byte, []int) {
 	return file_grpc_channelz_v1_channelz_proto_rawDescGZIP(), []int{17}
 }
 
-func (x *SocketOptionTimeout) GetDuration() *duration.Duration {
+func (x *SocketOptionTimeout) GetDuration() *durationpb.Duration {
 	if x != nil {
 		return x.Duration
 	}
@@ -1635,7 +1635,7 @@ type SocketOptionLinger struct {
 	// active maps to `struct linger.l_onoff`
 	Active bool `protobuf:"varint,1,opt,name=active,proto3" json:"active,omitempty"`
 	// duration maps to `struct linger.l_linger`
-	Duration *duration.Duration `protobuf:"bytes,2,opt,name=duration,proto3" json:"duration,omitempty"`
+	Duration *durationpb.Duration `protobuf:"bytes,2,opt,name=duration,proto3" json:"duration,omitempty"`
 }
 
 func (x *SocketOptionLinger) Reset() {
@@ -1677,7 +1677,7 @@ func (x *SocketOptionLinger) GetActive() bool {
 	return false
 }
 
-func (x *SocketOptionLinger) GetDuration() *duration.Duration {
+func (x *SocketOptionLinger) GetDuration() *durationpb.Duration {
 	if x != nil {
 		return x.Duration
 	}
@@ -2851,7 +2851,7 @@ type Address_OtherAddress struct {
 	// The human readable version of the value.  This value should be set.
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// The actual address message.
-	Value *any1.Any `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Value *anypb.Any `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 }
 
 func (x *Address_OtherAddress) Reset() {
@@ -2893,7 +2893,7 @@ func (x *Address_OtherAddress) GetName() string {
 	return ""
 }
 
-func (x *Address_OtherAddress) GetValue() *any1.Any {
+func (x *Address_OtherAddress) GetValue() *anypb.Any {
 	if x != nil {
 		return x.Value
 	}
@@ -3011,7 +3011,7 @@ type Security_OtherSecurity struct {
 	// The human readable version of the value.
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// The actual security details message.
-	Value *any1.Any `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Value *anypb.Any `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 }
 
 func (x *Security_OtherSecurity) Reset() {
@@ -3053,7 +3053,7 @@ func (x *Security_OtherSecurity) GetName() string {
 	return ""
 }
 
-func (x *Security_OtherSecurity) GetValue() *any1.Any {
+func (x *Security_OtherSecurity) GetValue() *anypb.Any {
 	if x != nil {
 		return x.Value
 	}
@@ -3633,8 +3633,8 @@ var file_grpc_channelz_v1_channelz_proto_goTypes = []interface{}{
 	(*Security_OtherSecurity)(nil),      // 40: grpc.channelz.v1.Security.OtherSecurity
 	(*timestamppb.Timestamp)(nil),       // 41: google.protobuf.Timestamp
 	(*wrapperspb.Int64Value)(nil),       // 42: google.protobuf.Int64Value
-	(*any1.Any)(nil),                    // 43: google.protobuf.Any
-	(*duration.Duration)(nil),           // 44: google.protobuf.Duration
+	(*anypb.Any)(nil),                   // 43: google.protobuf.Any
+	(*durationpb.Duration)(nil),         // 44: google.protobuf.Duration
 }
 var file_grpc_channelz_v1_channelz_proto_depIdxs = []int32{
 	8,  // 0: grpc.channelz.v1.Channel.ref:type_name -> grpc.channelz.v1.ChannelRef

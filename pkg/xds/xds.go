@@ -92,7 +92,7 @@ type XDSConfig struct {
 	XDS string
 	// Not included: Locality, Meta, GrpcOpts, NodeId
 
-	MeshAuth *meshauth.MeshAuth
+	MeshAuth *meshauth.Mesh
 }
 
 type XDS struct {
@@ -177,7 +177,7 @@ func NewXDS(cfg *XDSConfig) *XDS {
 		},
 	}
 
-	client := v3connect.NewAggregatedDiscoveryServiceClient(//cfg.MeshAuth,
+	client := v3connect.NewAggregatedDiscoveryServiceClient(//cfg.Mesh,
 		hc2, // HttpClient(xdsdest),
 		url, connect.WithGRPC())
 

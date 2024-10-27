@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="go build github.com/costinm/grpc-mesh/ptrds/ptrdc" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
+    <module name="grpc-mesh" />
+    <working_directory value="$PROJECT_DIR$/ptrds" />
+    <kind value="PACKAGE" />
+    <package value="github.com/costinm/grpc-mesh/ptrds/ptrdc" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/ptrds/ptrdc/ptrdc.go" />
+    <method v="2" />
+  </configuration>
+</component>
