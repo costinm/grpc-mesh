@@ -30,11 +30,12 @@
 
 syntax = "proto3";
 
-package google.protobuf;
+package google.protobuf.duration;
 
 option csharp_namespace = "Google.Protobuf.WellKnownTypes";
 option cc_enable_arenas = true;
-option go_package = "github.com/golang/protobuf/ptypes/duration";
+// Conflicts with any.proto 'new'
+option go_package = "github.com/costinm/grpc-mesh/gen/proto/go/google/protobuf/duration";
 option java_package = "com.google.protobuf";
 option java_outer_classname = "DurationProto";
 option java_multiple_files = true;
